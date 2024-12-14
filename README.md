@@ -70,5 +70,7 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ## Contact
 
-For any questions or issues, please contact [marc@codemarc.net](mailto:marc@codemarc.net).
+For any questions or issues, please contact [marc@codemarc.net](mailto:marc@codemarc.net).  
+
+[I am Codemarc](https://codemarc.net)
 

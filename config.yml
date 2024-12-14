@@ -1,0 +1,28 @@
+version: 1
+accounts:
+  - account: codemarc
+    type: imap
+    user: codemarc@gmail.com
+    password: >-
+      74a038895362f691d4c5ad0ec049123d::471f1ba882e3d20aa853563f6727df8b36ea0ea48a75c4dbb9990c169d05b383
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    tlsOptions:
+      rejectUnauthorized: false
+    folders:
+      scan: INBOX
+      trash: '[Gmail]/Trash'
+  - account: marc
+    type: imap
+    user: marc@codemarc.net
+    password: >-
+      16b7fbc5edd92b1b370bad37e8a835fe::47025e8f3843ea07f9987bad2b175cedebf63709a38b2fa512e3be66bb76c23d
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    tlsOptions:
+      rejectUnauthorized: false
+    folders:
+      scan: INBOX
+      trash: '[Gmail]/Trash'
