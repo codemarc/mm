@@ -1,10 +1,11 @@
 import _ from 'lodash';
 import cTable from 'console.table';
+import { load } from './smash.js';
 
 
 // Export the show command handler
 export const showCommand = async (args, options, logger) => {
-    const config = args[0]
+    const config = load()
 
     if (options.account) {
         if(typeof options.account === 'string' && options.account.length > 0) {

@@ -60,6 +60,9 @@ The application requires a `config.yml` file in the root directory. This file sh
 
 - `MM_CRYPTOKEY`: Set this environment variable to provide the encryption key used for decrypting email configurations.
 
+
+
+
 ## Contributing
 
 Contributions are welcome! Please fork the repository and submit a pull request.
