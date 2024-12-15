@@ -3,6 +3,7 @@ import pak from "./package.json" assert { type: "json" };
 import program from "caporal";
 import { showCommand  } from "./src/show.js";
 import { smashCommand } from "./src/smash.js";
+import { scanCommand } from "./src/scan.js";
 
 try {
 	program.name(pak.name);
@@ -32,10 +33,12 @@ try {
 	// --------------------------------------------------------------
 	program
 		.command("scan", "scan email folders")
-		.option("-a, --account", "specify account from config (default: all)")
-		.action(async (args, options, logger) => {
-			logger.info("scanning email folders");
-		});
+		.option("-a, --account", "specify account from config (default: first loaded)")
+		.option("-s, --skip", "skip number of emails to scan (default: 0)")
+		.option("-l, --limit", "limit number of emails to scan (default: 3)")
+		.option("-r, --read", "mark emails as read")
+		.action(scanCommand);
+
 
 	// program starts to run on this line
 	program.parse(process.argv);

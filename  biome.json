@@ -1,0 +1,6 @@
+{
+	"formatter": {
+		"useEditorConfig": true,
+		"semicolons": "never"
+	}   
+}

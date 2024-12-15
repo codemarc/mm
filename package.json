@@ -1,20 +1,16 @@
 {
   "name": "mailminder",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "description": "helper to manage email",
   "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "main": "mm",
+  "author": "Marc J. <marc@codemarc.net>",
+  "license": "MIT",
   "dependencies": {
     "caporal": "^1.4.0",
     "chalk": "^4.1.2",
     "console.table": "^0.10.0",
-    "imap": "^0.8.17",
+    "imapflow": "^1.0.171",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "mailparser": "^3.7.2"
