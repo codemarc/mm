@@ -10,9 +10,15 @@ accounts:
     tls: true
     blacklist:
       - domain:expireinthemoney.com
+      - domain:unroll.me
+      - domain:swagbucksemail.com
+      - domain:shinefymail.com
+      - domain:bestchartnow.com
+      - domain:stocksforme.com
       - Jack@tradealgo.com
       - email@venusetfleur.com
       - editor@em.tradingessentialshub.com
+      - choscais@gmail.com
 
   - account: marc
     type: imap
@@ -26,3 +32,5 @@ accounts:
       - cleaner@codemarc.net
       - domain:unroll.me
       - domain:quora.com
+      - noreply@jhancock.com
+      - support@zendrop.com

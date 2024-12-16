@@ -7,6 +7,7 @@ import { load, decrypt } from "./smash.js";
 export async function scanCommand(args, options, logger) {
 	try {
 		const limit = Number.parseInt(options.limit || "3");
+		const skip = Number.parseInt(options.skip || "0");
 		const config = load();
 		const account = options.account
 			? _.find(config.accounts, { account: options.account })
@@ -18,14 +19,14 @@ export async function scanCommand(args, options, logger) {
 		}
 
 		const blacklist = account.blacklist ?? [];
-		await scanMailbox(logger, account, limit, blacklist);
+		await scanMailbox(logger, account, limit, blacklist, skip, options);
 	} catch (error) {
 		logger.error("Scan command failed:", error.message);
 		process.exit(1);
 	}
 }
 
-function roundToMinutes(date) {
+export function roundToMinutes(date) {
 	const d = new Date(date);
 	return new Date(
 		d.getFullYear(),
@@ -36,7 +37,7 @@ function roundToMinutes(date) {
 	);
 }
 
-async function scanMailbox(logger, account, limit, blacklist) {
+async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 	const client = new ImapFlow({
 		host: account.host,
 		port: account.port,
@@ -55,10 +56,11 @@ async function scanMailbox(logger, account, limit, blacklist) {
 		// Select and lock INBOX
 		const lock = await client.getMailboxLock('INBOX');
 		try {
-			// Get message count
-			const messages = await client.search({ all: true });
-			const messagesToFetch = messages.slice(-limit); // Get last 'limit' messages
-			logger.info(`Found ${messagesToFetch.length} messages\n`);
+			// Modify search to include unread filter if specified
+			const searchCriteria = options.unread ? { unseen: true } : { all: true };
+			const messages = await client.search(searchCriteria);
+			const messagesToFetch = messages.slice(-limit - skip, -skip || undefined);
+			logger.info(`Found ${messages.length} ${options.unread ? 'unread ' : ''}messages, showing ${messagesToFetch.length} (skipping ${skip})\n`);
 
 			const blacklistedMessages = [];
 
@@ -93,7 +95,9 @@ async function scanMailbox(logger, account, limit, blacklist) {
 				logger.info("\n");
 
 				// Mark message as read
-				await client.messageFlagsAdd(seq, ['\\Seen']);
+        if (options.read) {
+          await client.messageFlagsAdd(seq, ['\\Seen']);
+        }
 			}
 
 			// Process blacklisted messages
