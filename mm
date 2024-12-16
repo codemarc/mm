@@ -33,7 +33,7 @@ try {
 	program
 		.command("scan", "scan email folders")
 		.option("-a, --account", "specify account from config (default: first loaded)")
-    .option("-f, --folder", "specify folder to scan (default: INBOX)",program.STRING, "INBOX",false)
+    .option("-f, --folder", "specify folder to scan (default: INBOX)")
 		.option("-l, --limit", "limit number of emails to scan (default: 3)")
 		.option("-r, --read", "mark emails as read")
 		.option("-s, --skip", "skip number of emails to scan (default: 0)")

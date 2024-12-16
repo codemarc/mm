@@ -4,12 +4,11 @@ accounts:
     type: imap
     user: codemarc@gmail.com
     password: >-
-      9655d9780596fba63addad58249f8d21::22442c4009476bb6fc458c7839da4481e1b06f69d174b5b07a869bf62bd9963f
+      324979cf5fc645c02c3ab7c924e65993::bf59f642d2c15959e03990088540344c8b8974a0113c715af926ad3c34249141
     host: imap.gmail.com
     port: 993
     tls: true
     blacklist:
-      - domain:expireinthemoney.com
       - domain:unroll.me
       - domain:swagbucksemail.com
       - domain:shinefymail.com
@@ -20,12 +19,13 @@ accounts:
       - email@venusetfleur.com
       - editor@em.tradingessentialshub.com
       - choscais@gmail.com
-
+      - info@email.meetup.com
+      - info@easywinningtimes.com
   - account: marc
     type: imap
     user: marc@codemarc.net
     password: >-
-      8144e581e46382932b88114b4e58282a::dcce4ee4623a6027babd67ff9ab17978a6443f7cf2ee900de596cfeab0554b4d
+      f2b9786c6bf920e442b45cfe267a131b::588a202f1389dfce45d92c7e713829b6828c3347ad9c1b16e9ad54f3638d72b9
     host: imap.gmail.com
     port: 993
     tls: true
@@ -35,3 +35,13 @@ accounts:
       - domain:quora.com
       - noreply@jhancock.com
       - support@zendrop.com
+  - account: marc17
+    type: imap
+    user: marcgreenberg17@gmail.com
+    password: >-
+      d5577510390b1bf6031d5fca7d816e3f::93e718eb5867ec94c8c14b86793e2f9dda256d0ad0e26c3b287d0744aa97e769
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    blacklist:
+      - domain:bedbathandbeyond.com

@@ -63,7 +63,7 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 		// Connect to server
 		await client.connect();
 
-    const folder = options.folder || "INBOX";
+    const folder = options.folder ? options.folder : "INBOX";
 		const lock = await client.getMailboxLock(folder);
 		try {
 			if (options.zero) {

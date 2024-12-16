@@ -47,8 +47,8 @@ export async function readCommand(args, options, logger) {
                 const availableMessages = messages.slice(skip);
 
                 for (const arg of seqnos) {
-                    const seqno = parseInt(arg);
-                    if (isNaN(seqno)) {
+                    const seqno = Number.parseInt(arg);
+                    if (Number.isNaN(seqno)) {
                         logger.error(chalk.red(`Invalid sequence number: ${arg}`));
                         continue;
                     }
@@ -78,7 +78,7 @@ export async function readCommand(args, options, logger) {
             
             await client.logout();
         } catch (err) {
-            logger.error(`Error reading messages:`, err.message);
+            logger.error('Error reading messages:', err.message);
         }
     } catch (error) {
         logger.error("Read command failed:", error.message);

@@ -1,12 +1,16 @@
-# MailMinder
+# Mailminder
 
-MailMinder is a command-line tool designed to manage and display email configurations and perform email folder scans.
+A command-line email management tool that helps you efficiently manage multiple email accounts, scan messages, and handle blacklisted emails.
 
 ## Features
 
-- Display email account configurations.
-- Scan email folders.
-- Supports quiet mode for minimal output.
+- Manage multiple IMAP email accounts
+- Scan and read emails from the command line
+- Blacklist management for unwanted senders
+- Secure password encryption
+- Message metrics and account statistics
+- Mark messages as read/unread
+- Move blacklisted messages to separate folders
 
 ## Installation
 

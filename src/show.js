@@ -40,9 +40,9 @@ export const showCommand = async (args, options, logger) => {
               lock.release();
               return {
                 account: account.account,
-                blacklist: account.blacklist.length,
-                unread: unread.length,
-                total: total.length
+                blacklist: account.blacklist.length.toLocaleString(),
+                unread: unread.length.toLocaleString(),
+                total: total.length.toLocaleString()
               }
             } catch (error) {
                 logger.error(error)
@@ -53,7 +53,11 @@ export const showCommand = async (args, options, logger) => {
           logger.info(cTable.getTable(metrics))
 
         } else {
+          if (options.verbose) {
             logger.info(config)
+          } else {
+             logger.info(_.map(config.accounts, 'account').toString().replace(/,/g, '\n'))
+          }
         }
     }
 }
