@@ -4,6 +4,16 @@ import _ from "lodash";
 import { simpleParser } from "mailparser";
 import { load, decrypt } from "./smash.js";
 
+async function zeroUnread(client, logger) {
+	const unread = await client.search({ unseen: true });
+	if (unread.length > 0) {
+		await client.messageFlagsAdd(unread, ["\\Seen"]);
+		logger.info(chalk.green(`Marked ${unread.length} messages as read`));
+	} else {
+		logger.info("No unread messages found");
+	}
+}
+
 export async function scanCommand(args, options, logger) {
 	try {
 		const limit = Number.parseInt(options.limit || "3");
@@ -53,103 +63,119 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 		// Connect to server
 		await client.connect();
 
-		// Select and lock INBOX
-		const lock = await client.getMailboxLock('INBOX');
+    const folder = options.folder || "INBOX";
+		const lock = await client.getMailboxLock(folder);
 		try {
-			// Modify search to include unread filter if specified
-			const searchCriteria = options.unread ? { unseen: true } : { all: true };
-			const messages = await client.search(searchCriteria);
-			const messagesToFetch = messages.slice(-limit - skip, -skip || undefined);
-			logger.info(`Found ${messages.length} ${options.unread ? 'unread ' : ''}messages, showing ${messagesToFetch.length} (skipping ${skip})\n`);
-
-			const blacklistedMessages = [];
-
-			// Fetch messages
-			for (const seq of messagesToFetch) {
-				const message = await client.fetchOne(seq, { source: true });
-				const parsed = await simpleParser(message.source);
-				
-				const senderEmail = parsed.from?.value?.[0]?.address?.toLowerCase();
-        const recipientEmail = parsed.to?.value?.[0]?.address?.toLowerCase();
-				const isBlacklisted = blacklist.some(
-					(blocked) => {
-            const blc = blocked.toLowerCase()
-            return blc === senderEmail 
-                || blc === recipientEmail
-                || (blc.startsWith('domain:') && senderEmail.endsWith(blc.slice(7)))
-          }
+			if (options.zero) {
+				await zeroUnread(client, logger);
+			} else {
+				// Modify search to include unread filter if specified
+				const searchCriteria = options.unread
+					? { unseen: true }
+					: { all: true };
+				const messages = await client.search(searchCriteria);
+				const messagesToFetch = messages.slice(
+					-limit - skip,
+					-skip || undefined,
 				);
-				
-				const seqString = chalk.blue(`Seqno: ${seq}`) + 
-					(isBlacklisted ? chalk.red(' BLACKLISTED') : '');
+				logger.info(
+					`Found ${messages.length} ${options.unread ? "unread " : ""}messages, showing ${messagesToFetch.length} (skipping ${skip})\n`,
+				);
 
-				if (isBlacklisted) {
-					blacklistedMessages.push(seq);
-				}
+				const blacklistedMessages = [];
 
-				logger.info(seqString);
-				logger.info(`From: ${parsed.from?.text || "(unknown sender)"}`);
-				logger.info(`To: ${parsed.to?.text || "(unknown recipient)"}`);
-				logger.info(`Subject: ${parsed.subject || "(no subject)"}`);
-				logger.info(`Date: ${roundToMinutes(parsed.date)}` || "(no date)");
-				logger.info("\n");
+				// Fetch messages
+				for (const seq of messagesToFetch) {
+					const message = await client.fetchOne(seq, { source: true });
+					const parsed = await simpleParser(message.source);
 
-				// Mark message as read
-        if (options.read) {
-          await client.messageFlagsAdd(seq, ['\\Seen']);
-        }
-			}
-
-			// Process blacklisted messages
-			if (blacklistedMessages.length > 0) {
-				// Try different possible folder paths
-				const possiblePaths = [
-					'Blacklisted',
-					'[Gmail]/Blacklisted',
-					'INBOX/Blacklisted'
-				];
-
-				let folderCreated = false;
-				for (const path of possiblePaths) {
-					try {
-						await client.mailboxCreate(path);
-						folderCreated = true;
-						
-						// Move messages to the successfully created folder
-						for (const seq of blacklistedMessages) {
-							await client.messageMove(seq, path);
-						}
-
-						logger.info(
-							chalk.yellow(
-								`Moved ${blacklistedMessages.length} blacklisted messages to ${path}`
-							)
+					const senderEmail = parsed.from?.value?.[0]?.address?.toLowerCase();
+					const recipientEmail = parsed.to?.value?.[0]?.address?.toLowerCase();
+					const isBlacklisted = blacklist.some((blocked) => {
+						const blc = blocked.toLowerCase();
+						return (
+							blc === senderEmail ||
+							blc === recipientEmail ||
+							(blc.startsWith("domain:") && senderEmail.endsWith(blc.slice(7)))
 						);
-						break; // Exit loop after successful creation and move
-					} catch (err) {
-						// If folder exists, try to use it
-						try {
-							// Attempt to move messages to existing folder
-							for (const seq of blacklistedMessages) {
-								await client.messageMove(seq, path);
-							}
-							
-							logger.info(
-								chalk.yellow(
-									`Moved ${blacklistedMessages.length} blacklisted messages to existing ${path}`
-								)
-							);
-							folderCreated = true;
-							break;
-						} catch (moveErr) {
-              logger.error(chalk.red(`Failed to move messages: ${moveErr.message}`));
-							// Continue to next path if this one fails
-						}
+					});
+
+					const seqString =
+						chalk.blue(`Seqno: ${seq}`) +
+						(isBlacklisted ? chalk.red(" BLACKLISTED") : "");
+
+					if (isBlacklisted) {
+						blacklistedMessages.push(seq);
+					}
+
+					logger.info(seqString);
+					logger.info(`From: ${parsed.from?.text || "(unknown sender)"}`);
+					logger.info(`To: ${parsed.to?.text || "(unknown recipient)"}`);
+					logger.info(`Subject: ${parsed.subject || "(no subject)"}`);
+					logger.info(`Date: ${roundToMinutes(parsed.date)}` || "(no date)");
+					logger.info("\n");
+
+					// Mark message as read
+					if (options.read) {
+						await client.messageFlagsAdd(seq, ["\\Seen"]);
 					}
 				}
 
-				if (!folderCreated) {
-					logger.error(chalk.red('Failed to create or find a blacklist folder'));
+				// Process blacklisted messages
+				if (blacklistedMessages.length > 0) {
+					// Try different possible folder paths
+					const possiblePaths = [
+						"Blacklisted",
+						"[Gmail]/Blacklisted",
+						"INBOX/Blacklisted",
+					];
+
+					let folderCreated = false;
+					for (const path of possiblePaths) {
+						try {
+							await client.mailboxCreate(path);
+							folderCreated = true;
+
+							// Move messages to the successfully created folder
+							for (const seq of blacklistedMessages) {
+								await client.messageMove(seq, path);
+							}
+
+							logger.info(
+								chalk.yellow(
+									`Moved ${blacklistedMessages.length} blacklisted messages to ${path}`,
+								),
+							);
+							break; // Exit loop after successful creation and move
+						} catch (err) {
+							// If folder exists, try to use it
+							try {
+								// Attempt to move messages to existing folder
+								for (const seq of blacklistedMessages) {
+									await client.messageMove(seq, path);
+								}
+
+								logger.info(
+									chalk.yellow(
+										`Moved ${blacklistedMessages.length} blacklisted messages to existing ${path}`,
+									),
+								);
+								folderCreated = true;
+								break;
+							} catch (moveErr) {
+								logger.error(
+									chalk.red(`Failed to move messages: ${moveErr.message}`),
+								);
+								// Continue to next path if this one fails
+							}
+						}
+					}
+
+					if (!folderCreated) {
+						logger.error(
+							chalk.red("Failed to create or find a blacklist folder"),
+						);
+					}
 				}
 			}
 		} finally {
@@ -157,9 +183,10 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 			lock.release();
 		}
 
-		// Close connection
-		await client.logout();
 	} catch (err) {
 		logger.error(`Error scanning account ${account.account}:`, err.message);
+	} finally {
+		await client.logout();
 	}
+
 }

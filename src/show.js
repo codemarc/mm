@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import cTable from 'console.table';
-import { load } from './smash.js';
+import { load,decrypt } from './smash.js';
+import { ImapFlow } from 'imapflow';
 
 
 // Export the show command handler
@@ -27,7 +28,33 @@ export const showCommand = async (args, options, logger) => {
             }
         }
     } else {
-        logger.info(config)
+        if (options.metrics) {
+
+          const metrics = await Promise.all(_.map(config.accounts, async (account) => {
+            const client = new ImapFlow({host: account.host,port: account.port,secure: account.tls !== false,auth: {user: account.user,pass: decrypt(account.password, false),},logger: false,});
+            try {
+              await client.connect();
+              const lock = await client.getMailboxLock('INBOX');
+              const unread = await client.search({ unseen: true })
+              const total = await client.search({ all: true })
+              lock.release();
+              return {
+                account: account.account,
+                blacklist: account.blacklist.length,
+                unread: unread.length,
+                total: total.length
+              }
+            } catch (error) {
+                logger.error(error)
+            } finally {
+              await client.logout();
+            }
+          }))
+          logger.info(cTable.getTable(metrics))
+
+        } else {
+            logger.info(config)
+        }
     }
 }
 

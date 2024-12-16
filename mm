@@ -23,7 +23,8 @@ try {
 	program
 		.command("show", "show config")
 		.option("-a, --account", "specify account from config")
-		.option("-q, --quiet", "quiet mode")
+		.option("-m, --metrics", "show metrics")
+    .option("-q, --quiet", "quiet mode")
 		.action(commands.show);
 
 	// --------------------------------------------------------------
@@ -32,10 +33,12 @@ try {
 	program
 		.command("scan", "scan email folders")
 		.option("-a, --account", "specify account from config (default: first loaded)")
+    .option("-f, --folder", "specify folder to scan (default: INBOX)",program.STRING, "INBOX",false)
 		.option("-l, --limit", "limit number of emails to scan (default: 3)")
 		.option("-r, --read", "mark emails as read")
 		.option("-s, --skip", "skip number of emails to scan (default: 0)")
 		.option("-u, --unread", "only show unread emails")
+    .option("-z, --zero", "zero out unread count")
 		.action(commands.scan);
 
 	// --------------------------------------------------------------
