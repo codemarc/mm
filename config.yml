@@ -9,14 +9,17 @@ accounts:
     port: 993
     tls: true
     blacklist:
-      - domain:unroll.me
-      - domain:swagbucksemail.com
-      - domain:shinefymail.com
-      - domain:bestchartnow.com
-      - domain:stocksforme.com
-      - domain:futureslabresearch.com
-      - Jack@tradealgo.com
-      - email@venusetfleur.com
+      - unroll.me
+      - swagbucksemail.com
+      - shinefymail.com
+      - bestchartnow.com
+      - stocksforme.com
+      - futureslabresearch.com
+      - expireinthemoney.com
+      - expireinthemoney.com
+      - tradealgo.com
+      - wealthifyo.com
+      - uphold.com
       - editor@em.tradingessentialshub.com
       - choscais@gmail.com
       - info@email.meetup.com
@@ -30,9 +33,9 @@ accounts:
     port: 993
     tls: true
     blacklist:
+      - unroll.me
+      - quora.com
       - cleaner@codemarc.net
-      - domain:unroll.me
-      - domain:quora.com
       - noreply@jhancock.com
       - support@zendrop.com
   - account: marc17
@@ -44,4 +47,4 @@ accounts:
     port: 993
     tls: true
     blacklist:
-      - domain:bedbathandbeyond.com
+      - bedbathandbeyond.com

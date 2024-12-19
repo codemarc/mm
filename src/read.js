@@ -3,7 +3,7 @@ import { ImapFlow } from "imapflow";
 import _ from "lodash";
 import { simpleParser } from "mailparser";
 import { load, decrypt } from "./smash.js";
-import { roundToMinutes } from "./scan.js";
+import u from "./util.js";
 
 export async function readCommand(args, options, logger) {
     try {
@@ -66,7 +66,7 @@ export async function readCommand(args, options, logger) {
                     logger.info(`From: ${parsed.from?.text || "(unknown sender)"}`);
                     logger.info(`To: ${parsed.to?.text || "(unknown recipient)"}`);
                     logger.info(`Subject: ${parsed.subject || "(no subject)"}`);
-                    logger.info(`Date: ${roundToMinutes(parsed.date)}` || "(no date)");
+                    logger.info(`Date: ${u.roundToMinutes(parsed.date)}` || "(no date)");
                     logger.info(`\nMessage:\n${parsed.text || "(no text content)"}\n`);
 
                     await client.messageFlagsAdd(actualSeqno, ['\\Seen']);

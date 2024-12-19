@@ -1,18 +1,31 @@
 {
-  "name": "mailminder",
-  "version": "0.0.4",
-  "description": "helper to manage email",
-  "type": "module",
-  "main": "mm",
-  "author": "Marc J. <marc@codemarc.net>",
-  "license": "MIT",
-  "dependencies": {
-    "caporal": "^1.4.0",
-    "chalk": "^4.1.2",
-    "console.table": "^0.10.0",
-    "imapflow": "^1.0.171",
-    "js-yaml": "^4.1.0",
-    "lodash": "^4.17.21",
-    "mailparser": "^3.7.2"
-  }
+	"name": "mailminder",
+	"version": "0.0.4",
+	"description": "helper to manage email",
+	"author": "Marc J. <marc@codemarc.net>",
+	"type": "module",
+	"main": "mm",
+	"license": "MIT",
+	"scripts": {
+        "test": "node --experimental-vm-modules node_modules/.bin/jest"
+	},
+	"dependencies": {
+		"caporal": "^1.4.0",
+		"chalk": "^4.1.2",
+		"console.table": "^0.10.0",
+		"imapflow": "^1.0.171",
+		"js-yaml": "^4.1.0",
+		"lodash": "^4.17.21",
+		"mailparser": "^3.7.2"
+	},
+	"devDependencies": {
+		"@babel/preset-env": "^7.26.0",
+		"babel-jest": "^29.7.0",
+		"jest": "^29.7.0"
+	},
+	"jest": {
+		"transform": {
+			"^.+\\.jsx?$": "babel-jest"
+		}
+	}
 }

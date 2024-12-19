@@ -1,16 +1,42 @@
-# autome
+# Mailminder Changelog
 
-## changes for 0.0.3
-- Added new `read` command to read specific email messages
-- Added support for reading multiple messages using comma-separated sequence numbers
-- Added ability to mark messages as read when viewing them
-- Added support for filtering unread messages in read command
-- Added skip option for read command
+## [0.0.4] - 2024
+### Added
+- Enhanced metrics display with comma-formatted numbers for better readability
+- Added quiet mode (`-q, --quiet`) to show command for simplified output
+- Improved error handling across all commands
 
-## changes for 0.0.2
+## [0.0.3] - 2024
+### Added
+- New `read` command to read specific email messages
+- Support for reading multiple messages using comma-separated sequence numbers
+- Ability to mark messages as read when viewing them
+- Support for filtering unread messages in read command
+- Skip option for read command
+- Improved message formatting and display
+
+### Changed
+- Enhanced error handling for message reading
+- Better date formatting for message display
+
+## [0.0.2] - 2024
+### Added
 - Improved blacklisted folder handling with multiple path attempts
 - Added fallback paths for different email providers
 - Enhanced error handling for folder creation and message moving
 
-## changes for 0.0.1
-- Initial version
+### Changed
+- Better handling of blacklist folder creation
+- Improved error messages for folder operations
+
+## [0.0.1] - 2024
+### Added
+- Initial release
+- Basic IMAP email account management
+- Email scanning functionality
+- Blacklist support
+- Password encryption/decryption with `smash` command
+- Configuration file support
+- Multiple account management
+- TLS support
+- Basic metrics display

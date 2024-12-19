@@ -1,8 +1,10 @@
 import chalk from "chalk";
 import { ImapFlow } from "imapflow";
 import _ from "lodash";
+import cTable from "console.table";
 import { simpleParser } from "mailparser";
 import { load, decrypt } from "./smash.js";
+import u from "./util.js";
 
 async function zeroUnread(client, logger) {
 	const unread = await client.search({ unseen: true });
@@ -14,14 +16,50 @@ async function zeroUnread(client, logger) {
 	}
 }
 
+async function getMetrics(config, logger) {
+	const metrics = await Promise.all(
+		_.map(config.accounts, async (account) => {
+			const client = new ImapFlow({
+				host: account.host,
+				port: account.port,
+				secure: account.tls !== false,
+				auth: { user: account.user, pass: decrypt(account.password, false) },
+				logger: false,
+			});
+			try {
+				await client.connect();
+				const lock = await client.getMailboxLock("INBOX");
+				const unread = await client.search({ unseen: true });
+				const total = await client.search({ all: true });
+				lock.release();
+				return {
+					account: account.account,
+					blacklist: account.blacklist.length.toLocaleString(),
+					unread: unread.length.toLocaleString(),
+					total: total.length.toLocaleString(),
+				};
+			} catch (error) {
+				logger.error(error);
+			} finally {
+				await client.logout();
+			}
+		}),
+	);
+	logger.info(cTable.getTable(metrics));
+}
+
 export async function scanCommand(args, options, logger) {
 	try {
+    const config = load();
+
+    if (options.metrics) {
+			getMetrics(config, logger);
+			return;
+		}
+
 		const limit = Number.parseInt(options.limit || "3");
 		const skip = Number.parseInt(options.skip || "0");
-		const config = load();
-		const account = options.account
-			? _.find(config.accounts, { account: options.account })
-			: _.first(config.accounts);
+		const account = u.getAccount(config, options.account);
 
 		if (!account) {
 			logger.error(chalk.red("account not found"));
@@ -36,18 +74,10 @@ export async function scanCommand(args, options, logger) {
 	}
 }
 
-export function roundToMinutes(date) {
-	const d = new Date(date);
-	return new Date(
-		d.getFullYear(),
-		d.getMonth(),
-		d.getDate(),
-		d.getHours(),
-		d.getMinutes(),
-	);
-}
 
 async function scanMailbox(logger, account, limit, blacklist, skip, options) {
+	const qar = [];
+
 	const client = new ImapFlow({
 		host: account.host,
 		port: account.port,
@@ -63,7 +93,12 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 		// Connect to server
 		await client.connect();
 
-    const folder = options.folder ? options.folder : "INBOX";
+		let folder = options.folder ? options.folder : "INBOX";
+    if (options.archive) {
+      folder = "[Gmail]/All Mail";  
+    }
+		let blacklistedMessageCount = 0;
+
 		const lock = await client.getMailboxLock(folder);
 		try {
 			if (options.zero) {
@@ -78,11 +113,11 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 					-limit - skip,
 					-skip || undefined,
 				);
-				logger.info(
-					`Found ${messages.length} ${options.unread ? "unread " : ""}messages, showing ${messagesToFetch.length} (skipping ${skip})\n`,
-				);
-
-				const blacklistedMessages = [];
+				if (!options.quiet) {
+					logger.info(
+						`Found ${messages.length} ${options.unread ? "unread " : ""}messages, showing ${messagesToFetch.length} (skipping ${skip})\n`,
+					);
+				}
 
 				// Fetch messages
 				for (const seq of messagesToFetch) {
@@ -96,7 +131,7 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 						return (
 							blc === senderEmail ||
 							blc === recipientEmail ||
-							(blc.startsWith("domain:") && senderEmail.endsWith(blc.slice(7)))
+							(blc.indexOf("@") === -1 && senderEmail.endsWith(blc))
 						);
 					});
 
@@ -104,89 +139,43 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 						chalk.blue(`Seqno: ${seq}`) +
 						(isBlacklisted ? chalk.red(" BLACKLISTED") : "");
 
-					if (isBlacklisted) {
-						blacklistedMessages.push(seq);
+					if (options.quiet) {
+						qar.push(seq);
+					} else {
+						logger.info(seqString);
+						logger.info(`From: ${parsed.from?.text || "(unknown sender)"}`);
+						logger.info(`To: ${parsed.to?.text || "(unknown recipient)"}`);
+						logger.info(`Subject: ${parsed.subject || "(no subject)"}`);
+						logger.info(`Date: ${u.roundToMinutes(parsed.date)}` || "(no date)");
+						logger.info("\n");
 					}
-
-					logger.info(seqString);
-					logger.info(`From: ${parsed.from?.text || "(unknown sender)"}`);
-					logger.info(`To: ${parsed.to?.text || "(unknown recipient)"}`);
-					logger.info(`Subject: ${parsed.subject || "(no subject)"}`);
-					logger.info(`Date: ${roundToMinutes(parsed.date)}` || "(no date)");
-					logger.info("\n");
 
 					// Mark message as read
 					if (options.read) {
 						await client.messageFlagsAdd(seq, ["\\Seen"]);
 					}
+
+					if (isBlacklisted) {
+						blacklistedMessageCount++;
+						await client.messageMove(seq, "Blacklisted");
+					}
 				}
-
-				// Process blacklisted messages
-				if (blacklistedMessages.length > 0) {
-					// Try different possible folder paths
-					const possiblePaths = [
-						"Blacklisted",
-						"[Gmail]/Blacklisted",
-						"INBOX/Blacklisted",
-					];
-
-					let folderCreated = false;
-					for (const path of possiblePaths) {
-						try {
-							await client.mailboxCreate(path);
-							folderCreated = true;
-
-							// Move messages to the successfully created folder
-							for (const seq of blacklistedMessages) {
-								await client.messageMove(seq, path);
-							}
-
-							logger.info(
-								chalk.yellow(
-									`Moved ${blacklistedMessages.length} blacklisted messages to ${path}`,
-								),
-							);
-							break; // Exit loop after successful creation and move
-						} catch (err) {
-							// If folder exists, try to use it
-							try {
-								// Attempt to move messages to existing folder
-								for (const seq of blacklistedMessages) {
-									await client.messageMove(seq, path);
-								}
-
-								logger.info(
-									chalk.yellow(
-										`Moved ${blacklistedMessages.length} blacklisted messages to existing ${path}`,
-									),
-								);
-								folderCreated = true;
-								break;
-							} catch (moveErr) {
-								logger.error(
-									chalk.red(`Failed to move messages: ${moveErr.message}`),
-								);
-								// Continue to next path if this one fails
-							}
-						}
-					}
-
-					if (!folderCreated) {
-						logger.error(
-							chalk.red("Failed to create or find a blacklist folder"),
-						);
-					}
+				if (!options.quiet) {
+					logger.info(
+						chalk.yellow(`Blacklisted ${blacklistedMessageCount} messages`),
+					);
 				}
 			}
 		} finally {
 			// Always release the lock
 			lock.release();
 		}
-
+		if (qar.length > 0) {
+			logger.info(`"${qar.join(",")}"`);
+		}
 	} catch (err) {
 		logger.error(`Error scanning account ${account.account}:`, err.message);
 	} finally {
 		await client.logout();
 	}
-
 }
