@@ -4,6 +4,9 @@ import { ImapFlow } from "imapflow";
 import { load, decrypt } from "./smash.js";
 import u from "./util.js";
 
+// ------------------------------------------------------------------------ 
+// empty
+// ------------------------------------------------------------------------
 const empty = async (client, logger, folder) => {
 	const lock = await client.getMailboxLock(`[Gmail]/${folder}`);
 	try {
@@ -23,6 +26,9 @@ const empty = async (client, logger, folder) => {
 	}
 };
 
+// ------------------------------------------------------------------------
+// trashem
+// ------------------------------------------------------------------------
 const trashem = async (client, logger, folder) => {
 	const lock = await client.getMailboxLock(folder);
 	try {
@@ -39,6 +45,9 @@ const trashem = async (client, logger, folder) => {
 	}
 };
 
+// ------------------------------------------------------------------------
+// get client
+// ------------------------------------------------------------------------
 const getClient = async (account, options, logger) => {
   try {
     const client = new ImapFlow({
@@ -61,15 +70,29 @@ const getClient = async (account, options, logger) => {
   }
 }
 
-
+// ------------------------------------------------------------------------
+// delete command
+// ------------------------------------------------------------------------
 export async function deleteCommand(args, options, logger) {
 	try {
 		const config = load();
 
+    // add a index property to each account
+    for(let count=0;count < config.accounts.length;count++) {
+      config.accounts[count].index = count+1
+    }
+
+    // if no account is specified then use the default account
+    options.account = args?.account ? args.account : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
+    if(options.verbose) logger.info(`account: ${options.account}`);
+
+
     // if empty is true, empty all accounts
-    if(!options.account && options.empty) {
+    if(options.empty && options.account === "all") {
       for(const account of config.accounts) {
-        logger.info(chalk.green(`deleting from account: ${account.user}`));
+        logger.info(chalk.blue("\n\n------------------------------------------------"));
+        logger.info(chalk.blue(`${account.index}: ${account.account} ${account.user}`));
+        logger.info(chalk.blue("------------------------------------------------"));
         const client = await getClient(account, options, logger);
         if(client) {
           await empty(client, logger, "Trash");

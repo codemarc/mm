@@ -17,6 +17,10 @@ const getAccount = (config, alias) => {
 	return config.accounts[accno - 1];
 }
 
+const getAccountNames = (config) => {
+  return _.map(config.accounts, 'account').toString().split(',')
+}
+
 const printAccountNames = (config, options, logger) => {
   const field = 'account'
   if(options.quiet) {
@@ -45,4 +49,4 @@ const roundToMinutes = (date) => {
 	);
 }
 
-export default { getAccount, printAccountNames, roundToMinutes };
+export default { getAccount, getAccountNames, printAccountNames, roundToMinutes };

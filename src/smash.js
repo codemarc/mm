@@ -5,11 +5,12 @@ import crypto from "node:crypto";
 const separator = "::";
 import path from 'node:path';
 
-
 // Get the current file's directory
 const __configfile = path.join(process.cwd(), 'config.yml');
 
-
+// ------------------------------------------------------------------------
+// load config
+// ------------------------------------------------------------------------
 export const load = (cFile) => {
 	let config = {};
 	try {
@@ -20,6 +21,9 @@ export const load = (cFile) => {
 	return config;
 };
 
+// ------------------------------------------------------------------------
+// smash command
+// ------------------------------------------------------------------------
 export const smashCommand = async (args, options, logger) => {
 	const config = load();
 
@@ -44,7 +48,7 @@ export const smashCommand = async (args, options, logger) => {
 		fs.writeFileSync(__configfile, yaml.dump(config));
 		logger.info("Decrypted all passwords");
 	} else {
-		logger.error("No action specified");
+		logger.error(chalk.red("No action specified"));    
 	}
 };
 

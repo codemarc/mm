@@ -1,11 +1,13 @@
 import chalk from "chalk";
 import { ImapFlow } from "imapflow";
 import _ from "lodash";
-import cTable from "console.table";
 import { simpleParser } from "mailparser";
 import { load, decrypt } from "./smash.js";
 import u from "./util.js";
 
+// ------------------------------------------------------------------------
+// zero unread
+// ------------------------------------------------------------------------
 async function zeroUnread(client, logger) {
 	const unread = await client.search({ unseen: true });
 	if (unread.length > 0) {
@@ -16,50 +18,41 @@ async function zeroUnread(client, logger) {
 	}
 }
 
-async function getMetrics(config, logger) {
-	const metrics = await Promise.all(
-		_.map(config.accounts, async (account) => {
-			const client = new ImapFlow({
-				host: account.host,
-				port: account.port,
-				secure: account.tls !== false,
-				auth: { user: account.user, pass: decrypt(account.password, false) },
-				logger: false,
-			});
-			try {
-				await client.connect();
-				const lock = await client.getMailboxLock("INBOX");
-				const unread = await client.search({ unseen: true });
-				const total = await client.search({ all: true });
-				lock.release();
-				return {
-					account: account.account,
-					blacklist: account.blacklist.length.toLocaleString(),
-					unread: unread.length.toLocaleString(),
-					total: total.length.toLocaleString(),
-				};
-			} catch (error) {
-				logger.error(error);
-			} finally {
-				await client.logout();
-			}
-		}),
-	);
-	logger.info(cTable.getTable(metrics));
-}
-
+// ------------------------------------------------------------------------
+// scan command
+// ------------------------------------------------------------------------
 export async function scanCommand(args, options, logger) {
 	try {
     const config = load();
 
-    if (options.metrics) {
-			getMetrics(config, logger);
-			return;
-		}
+    // add a index property to each account
+    for(let count=0;count < config.accounts.length;count++) {
+      config.accounts[count].index = count+1
+    }
 
-		const limit = Number.parseInt(options.limit || "3");
+    // if no account is specified then use the default account
+    options.account = args?.account ? args.account : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
+    if(options.verbose) logger.info(`account: ${options.account}`);
+
+		const limit = Number.parseInt(options.limit || process.env.LIMIT || "5");
 		const skip = Number.parseInt(options.skip || "0");
-		const account = u.getAccount(config, options.account);
+    
+    // if the account is all
+    if(options.account === "all") {
+      for(const account of config.accounts) {
+        logger.info(chalk.blue("\n\n------------------------------------------------"));
+        logger.info(chalk.blue(`${account.index}: ${account.account}`));
+        logger.info(chalk.blue("------------------------------------------------"));
+        const blacklist = account.blacklist ?? [];
+        await scanMailbox(logger, account, limit, blacklist, skip, options);
+      }
+      return;
+    }
+    
+    // otherwise show the counts for the account
+    const account = u.getAccount(config, options.account);
+
+
 
 		if (!account) {
 			logger.error(chalk.red("account not found"));
@@ -68,13 +61,18 @@ export async function scanCommand(args, options, logger) {
 
 		const blacklist = account.blacklist ?? [];
 		await scanMailbox(logger, account, limit, blacklist, skip, options);
+
+
+
 	} catch (error) {
 		logger.error("Scan command failed:", error.message);
 		process.exit(1);
 	}
 }
 
-
+// ------------------------------------------------------------------------
+// scan mailbox
+// ------------------------------------------------------------------------
 async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 	const qar = [];
 
@@ -86,7 +84,7 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 			user: account.user,
 			pass: decrypt(account.password, false),
 		},
-		logger: false,
+		logger: false
 	});
 
 	try {

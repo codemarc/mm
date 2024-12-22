@@ -8,7 +8,6 @@ try {
 	program.version(pak.version);
 	program.description(pak.description);
 
-
 	// --------------------------------------------------------------
 	// smash command
 	// --------------------------------------------------------------
@@ -18,15 +17,15 @@ try {
 		.option("-d, --decrypt", "decrypt secrets")
 		.action(commands.smash);
 
-
-
     
 	// --------------------------------------------------------------
 	// show command
 	// --------------------------------------------------------------
 	program
 		.command("show", "show config things...")
-		.option("-a, --account", "specify account from config")
+    .argument("[account]", "specify account from config (defaults to all)")
+    .option("-c, --counts", "show message counts")
+    .option("-l, --list", "show all accounts")
     .option("-q, --quiet", "quiet mode")
     .option("-v, --verbose", "verbose mode")
 		.action(commands.show);
@@ -36,11 +35,10 @@ try {
 	// --------------------------------------------------------------
 	program
 		.command("scan", "scan email folders")
-		.option("-a, --account", "specify account from config (default: first loaded)")
+    .argument("[account]", "specify account from config (defaults to all)")
     .option("-f, --folder", "specify folder to scan (default: INBOX)")
     .option("-g, --archive", "specify archive folder, (default: All Mail or Archive)")
     .option("-l, --limit", "limit number of emails to scan (default: 3)")
-    .option("-m, --metrics", "show metrics")
 		.option("-r, --read", "mark emails as read")
 		.option("-s, --skip", "skip number of emails to scan (default: 0)")
 		.option("-u, --unread", "only show unread emails")
@@ -48,23 +46,24 @@ try {
     .option("-z, --zero", "zero out unread count")
 		.action(commands.scan);
 
+  // todo: decide if we want to keep this
 	// --------------------------------------------------------------
   // read command
   // --------------------------------------------------------------
-  program
-    .command("read", "read email")
-    .option("-a, --account", "specify account from config (default: first loaded)")
-    .option("-u, --unread", "only show unread emails")
-    .option("-s, --skip", "skip n scan (default: 0)")
-    .argument("[seq]", "sequence number(s) of email to read, comma separated defaults to first found")
-    .action(commands.read);
+  // program
+  //   .command("read", "read email")
+  //   .option("-a, --account", "specify account from config (default: first loaded)")
+  //   .option("-u, --unread", "only show unread emails")
+  //   .option("-s, --skip", "skip n scan (default: 0)")
+  //   .argument("[seq]", "sequence number(s) of email to read, comma separated defaults to first found")
+  //   .action(commands.read);
 
 	// --------------------------------------------------------------
   // delete command
   // --------------------------------------------------------------
   program
     .command("delete", "delete email")
-    .option("-a, --account", "specify account from config (default: first loaded)")
+    .argument("[account]", "specify account from config (defaults to all)")
     .option("-f, --folder", "move content of the named folder to trash")
     .option("-e, --empty", "empty the trash + spam")
     .option("-l, --limit", "limit number of emails to delete (used when seq is specified as -/+ n  (default: 1)")
@@ -72,7 +71,10 @@ try {
     .argument("[seq]", "sequence number(s) of email to delete, comma separated, hyphen for a range")
     .action(commands.delete);
 
-	// program starts to run on this line
+  if(process.argv.length < 3){
+    process.argv.push('-h')
+  }
+
 	program.parse(process.argv);
 } catch (e) {
 	console.error(e);
