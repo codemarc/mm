@@ -1,8 +1,7 @@
-import chalk from "chalk";
-import { ImapFlow } from "imapflow";
+import chalk from "chalk"
 import _ from "lodash";
 import { simpleParser } from "mailparser";
-import { load, decrypt } from "./smash.js";
+import { load } from "./smash.js"
 import u from "./util.js";
 
 // ------------------------------------------------------------------------
@@ -52,8 +51,6 @@ export async function scanCommand(args, options, logger) {
     // otherwise show the counts for the account
     const account = u.getAccount(config, options.account);
 
-
-
 		if (!account) {
 			logger.error(chalk.red("account not found"));
 			return;
@@ -61,8 +58,6 @@ export async function scanCommand(args, options, logger) {
 
 		const blacklist = account.blacklist ?? [];
 		await scanMailbox(logger, account, limit, blacklist, skip, options);
-
-
 
 	} catch (error) {
 		logger.error("Scan command failed:", error.message);
@@ -75,17 +70,7 @@ export async function scanCommand(args, options, logger) {
 // ------------------------------------------------------------------------
 async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 	const qar = [];
-
-	const client = new ImapFlow({
-		host: account.host,
-		port: account.port,
-		secure: account.tls !== false,
-		auth: {
-			user: account.user,
-			pass: decrypt(account.password, false),
-		},
-		logger: false
-	});
+  const client = await u.getImapFlow(account, options, logger);
 
 	try {
 		// Connect to server

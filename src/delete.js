@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import _ from "lodash";
-import { ImapFlow } from "imapflow";
-import { load, decrypt } from "./smash.js";
+import { load } from "./smash.js"
 import u from "./util.js";
 
 // ------------------------------------------------------------------------ 
@@ -50,16 +49,7 @@ const trashem = async (client, logger, folder) => {
 // ------------------------------------------------------------------------
 const getClient = async (account, options, logger) => {
   try {
-    const client = new ImapFlow({
-      host: account.host,
-      port: account.port,
-      secure: account.tls !== false,
-      auth: {
-        user: account.user,
-        pass: decrypt(account.password, false),
-      },
-      logger: false
-    });
+    const client = u.getImapFlow(account, options, logger);
     if(!options.test)  {
       await client.connect();
     }
@@ -95,6 +85,7 @@ export async function deleteCommand(args, options, logger) {
         logger.info(chalk.blue("------------------------------------------------"));
         const client = await getClient(account, options, logger);
         if(client) {
+          await empty(client, logger, "Drafts");
           await empty(client, logger, "Trash");
           await empty(client, logger, "Spam");
           await client.logout();
@@ -184,7 +175,7 @@ export async function deleteCommand(args, options, logger) {
 
 		// empty trash and spam
 		if (options.empty) {
-
+      await empty(client, logger, "Drafts");
 			await empty(client, logger, "Trash");
 			await empty(client, logger, "Spam");
 		}

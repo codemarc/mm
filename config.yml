@@ -9,22 +9,26 @@ accounts:
     port: 993
     tls: true
     blacklist:
-      - unroll.me
-      - swagbucksemail.com
-      - shinefymail.com
+      - acquisition.com
+      - autobestinsurances.com
       - bestchartnow.com
-      - stocksforme.com
-      - futureslabresearch.com
-      - expireinthemoney.com
-      - expireinthemoney.com
-      - tradealgo.com
-      - wealthifyo.com
-      - uphold.com
+      - choscais@gmail.com
       - dailydigest@email.join1440.com
       - editor@em.tradingessentialshub.com
-      - choscais@gmail.com
+      - expireinthemoney.com
+      - futureslabresearch.com
+      - info@em.dailygoldalerts.com
       - info@email.meetup.com
       - info@easywinningtimes.com
+      - rogerscott.com
+      - shinefymail.com
+      - stocksforme.com
+      - swagbucksemail.com
+      - tradealgo.com
+      - unroll.me
+      - uphold.com
+      - wealthempire.com
+      - wealthifyo.com
   - account: marc
     type: imap
     user: marc@codemarc.net
@@ -36,6 +40,7 @@ accounts:
     blacklist:
       - unroll.me
       - quora.com
+      - billygene.com
       - cleaner@codemarc.net
       - noreply@jhancock.com
       - support@zendrop.com

@@ -8,6 +8,14 @@ try {
 	program.version(pak.version);
 	program.description(pak.description);
 
+  // --------------------------------------------------------------
+  // open command
+  // --------------------------------------------------------------
+  program.command("open", "open mail")
+    .argument("[what]", "specify mail progrm to run (defaults to outlook)")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.open);
+
 	// --------------------------------------------------------------
 	// smash command
 	// --------------------------------------------------------------
@@ -25,6 +33,7 @@ try {
 		.command("show", "show config things...")
     .argument("[account]", "specify account from config (defaults to all)")
     .option("-c, --counts", "show message counts")
+    .option("-f, --folders", "show folder counts")
     .option("-l, --list", "show all accounts")
     .option("-q, --quiet", "quiet mode")
     .option("-v, --verbose", "verbose mode")
@@ -39,15 +48,33 @@ try {
     .option("-f, --folder", "specify folder to scan (default: INBOX)")
     .option("-g, --archive", "specify archive folder, (default: All Mail or Archive)")
     .option("-l, --limit", "limit number of emails to scan (default: 3)")
+    .option("-q, --quiet", "quiet mode")
 		.option("-r, --read", "mark emails as read")
 		.option("-s, --skip", "skip number of emails to scan (default: 0)")
 		.option("-u, --unread", "only show unread emails")
-    .option("-q, --quiet", "quiet mode")
+    .option("-v, --verbose", "verbose mode")
     .option("-z, --zero", "zero out unread count")
 		.action(commands.scan);
 
+
+  // --------------------------------------------------------------
+  // delete command
+  // --------------------------------------------------------------
+  program
+    .command("del", "delete email")
+    .argument("[account]", "specify account from config (defaults to all)")
+    .argument("[seq]", "sequence number(s) of email to delete, comma separated, hyphen for a range")
+    .option("-e, --empty", "empty the trash + spam")
+    .option("-f, --folder", "move content of the named folder to trash")
+    .option("-l, --limit", "limit number of emails to delete (used when seq is specified as -/+ n  (default: 1)")
+    .option("-q, --quiet", "quiet mode")
+    .option("-t, --test", "dont actually delete")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.delete);
+
+
   // todo: decide if we want to keep this
-	// --------------------------------------------------------------
+  // --------------------------------------------------------------
   // read command
   // --------------------------------------------------------------
   // program
@@ -58,18 +85,6 @@ try {
   //   .argument("[seq]", "sequence number(s) of email to read, comma separated defaults to first found")
   //   .action(commands.read);
 
-	// --------------------------------------------------------------
-  // delete command
-  // --------------------------------------------------------------
-  program
-    .command("delete", "delete email")
-    .argument("[account]", "specify account from config (defaults to all)")
-    .option("-f, --folder", "move content of the named folder to trash")
-    .option("-e, --empty", "empty the trash + spam")
-    .option("-l, --limit", "limit number of emails to delete (used when seq is specified as -/+ n  (default: 1)")
-    .option("-t, --test", "dont actually delete")
-    .argument("[seq]", "sequence number(s) of email to delete, comma separated, hyphen for a range")
-    .action(commands.delete);
 
   if(process.argv.length < 3){
     process.argv.push('-h')
