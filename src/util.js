@@ -38,7 +38,7 @@ const refreshFilters = async (account) => {
   if (account.filters) {
     for (const filter of account.filters) {
       const arf = filter.split(":")
-      const filename = path.join(process.cwd(), arf.reverse().join("."))
+      const filename = path.join(process.cwd(), process.env.MM_FILTERS_PATH ?? "filters", arf.reverse().join("."))
       if (!fs.existsSync(filename)) {
         continue
       }

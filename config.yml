@@ -18,15 +18,8 @@ accounts:
     host: imap.gmail.com
     port: 993
     tls: true
-    blacklist:
-      - unroll.me
-      - quora.com
-      - billygene.com
-      - accessadrian.com
-      - gohighlevel.com
-      - cleaner@codemarc.net
-      - noreply@jhancock.com
-      - support@zendrop.com
+    filters:
+      - blacklist:marc
   - account: marc17
     type: imap
     user: marcgreenberg17@gmail.com

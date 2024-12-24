@@ -3,11 +3,21 @@ import _ from "lodash";
 import { load } from "./smash.js"
 import u from "./util.js";
 
+// the gmail workaround to get the right folder path
+const getFolderPath = async (client, name) => {
+  const folders = await client.list()
+  if (name === "Archive") {
+    return _.find(folders, (f) => f.name === name)?.path ?? "[Gmail]/All Mail"
+  }
+  return _.find(folders, (f) => f.name === name)?.path
+}
+
 // ------------------------------------------------------------------------ 
 // empty
 // ------------------------------------------------------------------------
 const empty = async (client, logger, folder) => {
-	const lock = await client.getMailboxLock(`[Gmail]/${folder}`);
+  const targ = await getFolderPath(client, folder)
+  const lock = await client.getMailboxLock(targ);
 	try {
 		// Search for all messages
 		const messages = await client.search({ all: true });
@@ -15,28 +25,28 @@ const empty = async (client, logger, folder) => {
 			// Delete all messages found
 			await client.messageDelete(messages);
 			logger.info(
-				chalk.green(`Emptied ${folder} - ${messages.length} messages`),
+        chalk.green(`Emptied ${targ} - ${messages.length} messages`),
 			);
 		} else {
-			logger.info(`${folder} is already empty`);
+      logger.info(`${targ} is already empty`);
 		}
 	} finally {
 		lock.release();
 	}
 };
 
+
 // ------------------------------------------------------------------------
 // mark archive read
 // ------------------------------------------------------------------------
 const markArchiveRead = async (client, logger) => {
-  const folders = await client.list()
-  const folder = _.find(folders, (f) => f.name === "Archive")?.path ?? "[Gmail]/All Mail"
+  const folder = await getFolderPath(client, "Archive")
   const lock = await client.getMailboxLock(folder)
   const searchCriteria = { unseen: true }
   const unread = await client.search(searchCriteria)
   if (unread.length > 0) {
     // mark all messages as read
-    logger(`Marking ${unread.length} ${folder} as read`)
+    logger.info(`Marking ${unread.length} ${folder} as read`)
     await client.messageFlagsAdd(unread, ["\\Seen"])
   } else {
     logger.info(`${folder} cleared`)
@@ -48,12 +58,13 @@ const markArchiveRead = async (client, logger) => {
 // trashem
 // ------------------------------------------------------------------------
 const trashem = async (client, logger, folder) => {
+  const trash = getFolderPath(client, "Trash")
 	const lock = await client.getMailboxLock(folder);
 	try {
     // move all messages to trash
     const messages = await client.search({ all: true });
 		if (messages.length > 0) {
-      await client.messageMove(messages, '[Gmail]/Trash');
+      await client.messageMove(messages, trash);
       logger.info(chalk.green(`Moved ${messages.length} messages to Trash`));
     } else {
       logger.info(`${folder} is already empty`);
@@ -176,10 +187,10 @@ export async function deleteCommand(args, options, logger) {
 							expanded = messages[messages.length + expanded[0]];
 						}
 					}
-					await client.messageMove(expanded, "[Gmail]/Trash");
+          const trash = await getFolderPath(client, "Trash")
+          await client.messageMove(expanded, trash);
 				} catch (err) {
-					// If Trash folder doesn't exist, try [Gmail]/Trash
-					await client.messageMove(expanded, "Trash");
+          logger.error(chalk.red(`error: ${err}`));
 				}
 				lock.release();
 			}
