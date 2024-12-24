@@ -8,27 +8,8 @@ accounts:
     host: imap.gmail.com
     port: 993
     tls: true
-    blacklist:
-      - acquisition.com
-      - autobestinsurances.com
-      - bestchartnow.com
-      - choscais@gmail.com
-      - dailydigest@email.join1440.com
-      - editor@em.tradingessentialshub.com
-      - expireinthemoney.com
-      - futureslabresearch.com
-      - info@em.dailygoldalerts.com
-      - info@email.meetup.com
-      - info@easywinningtimes.com
-      - rogerscott.com
-      - shinefymail.com
-      - stocksforme.com
-      - swagbucksemail.com
-      - tradealgo.com
-      - unroll.me
-      - uphold.com
-      - wealthempire.com
-      - wealthifyo.com
+    filters:
+      - blacklist:codemarc
   - account: marc
     type: imap
     user: marc@codemarc.net
@@ -41,6 +22,8 @@ accounts:
       - unroll.me
       - quora.com
       - billygene.com
+      - accessadrian.com
+      - gohighlevel.com
       - cleaner@codemarc.net
       - noreply@jhancock.com
       - support@zendrop.com

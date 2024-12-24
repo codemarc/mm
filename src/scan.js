@@ -56,6 +56,7 @@ export async function scanCommand(args, options, logger) {
 			return;
 		}
 
+    await u.refreshFilters(account);
 		const blacklist = account.blacklist ?? [];
 		await scanMailbox(logger, account, limit, blacklist, skip, options);
 
@@ -78,7 +79,9 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 
 		let folder = options.folder ? options.folder : "INBOX";
     if (options.archive) {
-      folder = "[Gmail]/All Mail";  
+      const folders = await client.list()
+      folder = _.find(folders, (f) => f.name === "Archive")?.path ?? "[Gmail]/All Mail"
+      logger.info(`Folder: ${folder}`);
     }
 		let blacklistedMessageCount = 0;
 
@@ -110,6 +113,7 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 					const senderEmail = parsed.from?.value?.[0]?.address?.toLowerCase();
 					const recipientEmail = parsed.to?.value?.[0]?.address?.toLowerCase();
 					const isBlacklisted = blacklist.some((blocked) => {
+            if (blocked.length === 0) return false;
 						const blc = blocked.toLowerCase();
 						return (
 							blc === senderEmail ||

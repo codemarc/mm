@@ -1,6 +1,8 @@
 import _ from "lodash"
 import { ImapFlow } from "imapflow"
 import { decrypt } from "./smash.js"
+import path from "node:path"
+import fs from "node:fs"
 
 //  ------------------------------------------------------------------------
 // get account
@@ -27,6 +29,25 @@ const getAccount = (config, alias) => {
 // ------------------------------------------------------------------------
 const getAccountNames = (config) => {
   return _.map(config.accounts, "account").toString().split(",")
+}
+
+// ------------------------------------------------------------------------
+// refresh 
+// ------------------------------------------------------------------------
+const refreshFilters = async (account) => {
+  if (account.filters) {
+    for (const filter of account.filters) {
+      const arf = filter.split(":")
+      const filename = path.join(process.cwd(), arf.reverse().join("."))
+      if (!fs.existsSync(filename)) {
+        continue
+      }
+      const list = (await fs.promises.readFile(filename, "utf8")).split('\n')
+      account[arf[1]] = list.concat(account[arf[1]] ?? [])
+      // console.dir(account)
+    }
+  }
+  return account
 }
 
 // ------------------------------------------------------------------------
@@ -84,6 +105,7 @@ export default {
   getImapFlow,
   getAccount,
   getAccountNames,
+  refreshFilters,
   printAccountNames,
   roundToMinutes,
 }
