@@ -1,5 +1,19 @@
 # Mailminder Changelog
 
+## [0.0.5] - 2024
+### Added
+- Support for multiple email account management
+- New `open` command to launch email clients
+- Enhanced account listing with index numbers
+- Improved folder display and management
+- Support for archive folder operations
+
+### Changed
+- Refactored account handling logic
+- Better environment variable support
+- Improved cross-platform compatibility
+- Enhanced error messages and logging
+
 ## [0.0.4] - 2024
 ### Added
 - Enhanced metrics display with comma-formatted numbers for better readability

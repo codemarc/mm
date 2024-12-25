@@ -1,7 +1,7 @@
 {
-	"name": "mailminder",
-	"version": "0.0.4",
-	"description": "helper to manage email",
+	"name": "mm",
+	"version": "0.0.5",
+	"description": "mail minder, helper to manage email",
 	"author": "Marc J. <marc@codemarc.net>",
 	"type": "module",
 	"main": "mm",

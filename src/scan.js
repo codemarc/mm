@@ -4,9 +4,13 @@ import { simpleParser } from "mailparser";
 import { load } from "./smash.js"
 import u from "./util.js";
 
-// ------------------------------------------------------------------------
-// zero unread
-// ------------------------------------------------------------------------
+/**
+ * zeroUnread - Marks all unread messages in the client's mailbox as read.
+ *
+ * @param {Object} client - The email client object.
+ * @param {Object} logger - The logger object for logging messages.
+ * @returns {Promise<void>} - A promise that resolves when all unread messages have been marked as read.
+ */
 async function zeroUnread(client, logger) {
 	const unread = await client.search({ unseen: true });
 	if (unread.length > 0) {

@@ -1,6 +1,6 @@
 import u from '../src/util';
 import _ from 'lodash';
-import { jest } from '@jest/globals';
+import { describe, jest } from '@jest/globals';
 
 // Sample config object to use in tests
 const testConfig = {
@@ -50,6 +50,38 @@ describe('getAccount', () => {
     expect(u.getAccount(testConfig, '')).toBeUndefined();
   });
 }); 
+
+describe('getAccountNames', () => {
+  
+  test('should return an array of account names', () => {
+    const expected = ['personal', 'work', 'backup'];
+    expect(u.getAccountNames(testConfig)).toEqual(expected);
+  });
+
+  test('should return empty array for config with no accounts', () => {
+    const emptyConfig = {};
+    expect(u.getAccountNames(emptyConfig)).toEqual([]);
+  });
+
+  test('should return empty array for null config', () => {
+    expect(u.getAccountNames(null)).toEqual([]);
+    expect(u.getAccountNames(undefined)).toEqual([]);
+  });
+
+  test('should return single account name', () => {
+    const singleConfig = {
+      accounts: {
+        personal: { host: 'imap.example.com' }
+      }
+    };
+    expect(u.getAccountNames(singleConfig)).toEqual(['personal']);
+  });
+
+  test('should handle config with empty accounts object', () => {
+    const configEmptyAccounts = { accounts: {} };
+    expect(u.getAccountNames(configEmptyAccounts)).toEqual([]);
+  });
+});
 
 describe('printAccountNames', () => {
 
