@@ -1,13 +1,24 @@
 {
-	"name": "mm",
+	"name": "@codemarc/mm",
 	"version": "0.0.5",
-	"description": "mail minder, helper to manage email",
-	"author": "Marc J. <marc@codemarc.net>",
-	"type": "module",
+	"description": "mail minder - tech to manage your inbox",
 	"main": "mm",
+	"type": "module",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/codemarc/mm.git"
+	},
+	"author": "marc j. greenberg <marc@codemarc.net>",
+	"bugs": {
+		"url": "https://github.com/codemarc/mm/issues"
+	},
+	"homepage": "https://github.com/codemarc/mm#readme",
+	"bin": {
+		"mm": "mm"
+	},
 	"scripts": {
-        "test": "node --experimental-vm-modules node_modules/.bin/jest"
+		"test": "node --experimental-vm-modules node_modules/.bin/jest"
 	},
 	"dependencies": {
 		"caporal": "^1.4.0",

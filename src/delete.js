@@ -3,7 +3,12 @@ import _ from "lodash";
 import { load } from "./smash.js"
 import u from "./util.js";
 
-// the gmail workaround to get the right folder path
+/**
+ * Gets the correct folder path accounting for Gmail's special folder structure
+ * @param {Object} client - IMAP client instance
+ * @param {string} name - Folder name to look up
+ * @returns {Promise<string>} The correct folder path
+ */
 const getFolderPath = async (client, name) => {
   const folders = await client.list()
   if (name === "Archive") {
@@ -15,6 +20,12 @@ const getFolderPath = async (client, name) => {
 // ------------------------------------------------------------------------ 
 // empty
 // ------------------------------------------------------------------------
+/**
+ * Permanently deletes all messages in specified folder
+ * @param {Object} client - IMAP client instance
+ * @param {Object} logger - Logger instance
+ * @param {string} folder - Folder name to empty
+ */
 const empty = async (client, logger, folder) => {
   const targ = await getFolderPath(client, folder)
   const lock = await client.getMailboxLock(targ);
@@ -39,6 +50,11 @@ const empty = async (client, logger, folder) => {
 // ------------------------------------------------------------------------
 // mark archive read
 // ------------------------------------------------------------------------
+/**
+ * Marks all messages in Archive as read
+ * @param {Object} client - IMAP client instance
+ * @param {Object} logger - Logger instance
+ */
 const markArchiveRead = async (client, logger) => {
   const folder = await getFolderPath(client, "Archive")
   const lock = await client.getMailboxLock(folder)
@@ -57,9 +73,20 @@ const markArchiveRead = async (client, logger) => {
 // ------------------------------------------------------------------------
 // trashem
 // ------------------------------------------------------------------------
-const trashem = async (client, logger, folder) => {
-  const trash = getFolderPath(client, "Trash")
+/**
+ * Moves all messages from specified folder to trash
+ * @param {Object} client - IMAP client instance
+ * @param {boolean} verbose - Enable verbose logging
+ * @param {Object} logger - Logger instance
+ * @param {string} folder - Source folder name
+ */
+const trashem = async (client, verbose, logger, folder) => {
+  const trash = await getFolderPath(client, "Trash")
+  if(verbose) logger.info(`trash: ${trash}`);
+
 	const lock = await client.getMailboxLock(folder);
+  if(verbose) logger.info(`folder: ${folder}`);
+
 	try {
     // move all messages to trash
     const messages = await client.search({ all: true });
@@ -77,6 +104,13 @@ const trashem = async (client, logger, folder) => {
 // ------------------------------------------------------------------------
 // get client
 // ------------------------------------------------------------------------
+/**
+ * Creates and connects an IMAP client
+ * @param {Object} account - Account configuration
+ * @param {Object} options - Command options
+ * @param {Object} logger - Logger instance
+ * @returns {Promise<Object|null>} Connected IMAP client or null on error
+ */
 const getClient = async (account, options, logger) => {
   try {
     const client = u.getImapFlow(account, options, logger);
@@ -93,6 +127,12 @@ const getClient = async (account, options, logger) => {
 // ------------------------------------------------------------------------
 // delete command
 // ------------------------------------------------------------------------
+/**
+ * Main delete command handler
+ * @param {Object} args - Command arguments
+ * @param {Object} options - Command options
+ * @param {Object} logger - Logger instance
+ */
 export async function deleteCommand(args, options, logger) {
 	try {
 		const config = load();
@@ -199,9 +239,9 @@ export async function deleteCommand(args, options, logger) {
 
 		// move all messages to trash
 		if (options.folder && typeof options.folder === "string") {
-			await trashem(client, logger, options.folder);
+			await trashem(client, options.verbose, logger, options.folder);
 		} else if (options.folder && typeof options.folder === "boolean") {
-			await trashem(client, logger, "Blacklisted");
+			await trashem(client, options.verbose, logger, "Blacklisted");
 		}
 
 		// empty trash and spam

@@ -1,6 +1,6 @@
-# Mailminder
+# Mail Manager (mm)
 
-A command-line email management tool that helps you efficiently manage multiple email accounts, scan messages, and handle blacklisted emails.
+A command-line tool for managing email accounts.
 
 ## Features
 
@@ -14,58 +14,59 @@ A command-line email management tool that helps you efficiently manage multiple 
 
 ## Installation
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/mailminder.git
-   cd mailminder
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Ensure you have a `config.yml` file in the root directory with your email configurations.
+```bash
+npm install
+```
 
 ## Usage
 
-Run the `mm` command with the desired options:
+```bash
+mm <command> [options]
+```
 
-- To show the configuration:
-  ```bash
-  ./mm show
-  ```
+## Commands
 
-- To specify an account:
-  ```bash
-  ./mm show -a <account_name>
-  ```
+### show
+Show email configuration and status
+```bash
+mm show [account] [-c] [-f] [-l] [-q] [-v]
+```
 
-- To run in quiet mode:
-  ```bash
-  ./mm show -q
-  ```
+### scan 
+Scan email folders
+```bash
+mm scan [account] [-f folder] [-g] [-l limit] [-q] [-r] [-s skip] [-u] [-v] [-z]
+```
 
-- To scan email folders:
-  ```bash
-  ./mm scan
-  ```
+### delete
+Delete emails
+```bash
+mm delete [account] [seq] [-e] [-f folder] [-l limit] [-q] [-t] [-v]
+```
 
-## Options
+### open
+Open mail client
+```bash
+mm open [what] [-v]
+```
 
-- `-a, --account`: Specify an account from the configuration.
-- `-q, --quiet`: Run the command in quiet mode.
+### smash
+Encrypt/decrypt secrets
+```bash
+mm smash [-e] [-d]
+```
 
 ## Configuration
 
-The application requires a `config.yml` file in the root directory. This file should contain your email account configurations in YAML format.
+Create a `.env.local` file with your configuration:
+
+```env
+MM_DEFAULT_ACCOUNT=your_default_account
+```
 
 ## Environment Variables
 
 - `MM_CRYPTOKEY`: Set this environment variable to provide the encryption key used for decrypting email configurations.
-
-
-
 
 ## Contributing
 

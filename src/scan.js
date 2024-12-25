@@ -7,9 +7,9 @@ import u from "./util.js";
 /**
  * zeroUnread - Marks all unread messages in the client's mailbox as read.
  *
- * @param {Object} client - The email client object.
- * @param {Object} logger - The logger object for logging messages.
- * @returns {Promise<void>} - A promise that resolves when all unread messages have been marked as read.
+ * @param {Object} client - The IMAP client object with messageFlags methods
+ * @param {Object} logger - Logger instance for output messages
+ * @returns {Promise<void>} A promise that resolves when all messages are marked as read
  */
 async function zeroUnread(client, logger) {
 	const unread = await client.search({ unseen: true });
@@ -24,6 +24,27 @@ async function zeroUnread(client, logger) {
 // ------------------------------------------------------------------------
 // scan command
 // ------------------------------------------------------------------------
+
+/**
+ * Main command handler for scanning email accounts and messages
+ * Processes email scanning based on provided arguments and options
+ *
+ * @param {Object} args - Command line arguments
+ * @param {string} [args.account] - Specific account to scan
+ * @param {Object} options - Command options
+ * @param {boolean} [options.verbose] - Enable verbose logging
+ * @param {boolean} [options.quiet] - Suppress detailed output
+ * @param {boolean} [options.read] - Mark messages as read
+ * @param {boolean} [options.unread] - Only show unread messages
+ * @param {boolean} [options.zero] - Zero out unread count
+ * @param {string} [options.folder] - Target folder to scan
+ * @param {boolean} [options.archive] - Use archive folder
+ * @param {number} [options.limit] - Maximum messages to scan
+ * @param {number} [options.skip] - Number of messages to skip
+ * @param {Object} logger - Logger instance for output
+ * @returns {Promise<void>} A promise that resolves when scanning is complete
+ * @throws {Error} If scanning fails or account is not found
+ */
 export async function scanCommand(args, options, logger) {
 	try {
     const config = load();
@@ -73,6 +94,28 @@ export async function scanCommand(args, options, logger) {
 // ------------------------------------------------------------------------
 // scan mailbox
 // ------------------------------------------------------------------------
+
+/**
+ * Scans a single mailbox for messages matching specified criteria
+ * Handles message fetching, parsing, blacklist checking, and message actions
+ *
+ * @param {Object} logger - Logger instance for output
+ * @param {Object} account - Account configuration object
+ * @param {string} account.account - Account identifier
+ * @param {Array<string>} account.blacklist - Blacklisted email addresses/domains
+ * @param {number} limit - Maximum number of messages to process
+ * @param {Array<string>} blacklist - Array of blacklisted addresses/domains
+ * @param {number} skip - Number of messages to skip
+ * @param {Object} options - Scanning options
+ * @param {boolean} [options.quiet] - Suppress detailed output
+ * @param {boolean} [options.read] - Mark messages as read
+ * @param {boolean} [options.unread] - Only show unread messages
+ * @param {boolean} [options.zero] - Zero out unread count
+ * @param {string} [options.folder] - Target folder to scan
+ * @param {boolean} [options.archive] - Use archive folder
+ * @returns {Promise<void>} A promise that resolves when mailbox scanning is complete
+ * @throws {Error} If mailbox scanning encounters an error
+ */
 async function scanMailbox(logger, account, limit, blacklist, skip, options) {
 	const qar = [];
   const client = await u.getImapFlow(account, options, logger);

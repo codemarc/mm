@@ -4,7 +4,7 @@ accounts:
     type: imap
     user: codemarc@gmail.com
     password: >-
-      324979cf5fc645c02c3ab7c924e65993::bf59f642d2c15959e03990088540344c8b8974a0113c715af926ad3c34249141
+      8fd5d059f19550f2025298bac2f38fda::bcb5610ed8fb8ae4ae826e978a225d5e35f7f57fc93d1bc1c6f3014520fb17be
     host: imap.gmail.com
     port: 993
     tls: true
@@ -14,7 +14,7 @@ accounts:
     type: imap
     user: marc@codemarc.net
     password: >-
-      f2b9786c6bf920e442b45cfe267a131b::588a202f1389dfce45d92c7e713829b6828c3347ad9c1b16e9ad54f3638d72b9
+      c0d0a2e292a79a7b1cef7385bea31b7a::f808c9204c447ab58ee82259b5fd9a148ea889ed4cbedbe3b263954c9300d086
     host: imap.gmail.com
     port: 993
     tls: true
@@ -24,9 +24,17 @@ accounts:
     type: imap
     user: marcgreenberg17@gmail.com
     password: >-
-      d5577510390b1bf6031d5fca7d816e3f::93e718eb5867ec94c8c14b86793e2f9dda256d0ad0e26c3b287d0744aa97e769
+      45c3713bac12fef7b30fae4b953bc541::9d528ba3021ffb870f145b51a48434d25feb49be0c3dc4faa2545b36ce6f1794
     host: imap.gmail.com
     port: 993
     tls: true
     blacklist:
       - bedbathandbeyond.com
+  - account: smashedata
+    type: imap
+    user: smashedata@gmail.com
+    password: >-
+      9a268b2b8d72acb45c081b8e15cda7f8::1ce3107825e23ba203e335653a0004abaad6803ecef166793f5f19a9bbd3e8ff
+    host: imap.gmail.com
+    port: 993
+    tls: true

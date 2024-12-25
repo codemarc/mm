@@ -8,29 +8,11 @@ try {
 	program.version(pak.version);
 	program.description(pak.description);
 
-  // --------------------------------------------------------------
-  // open command
-  // --------------------------------------------------------------
-  program.command("open", "open mail")
-    .argument("[what]", "specify mail progrm to run (defaults to outlook)")
-    .option("-v, --verbose", "verbose mode")
-    .action(commands.open);
-
-	// --------------------------------------------------------------
-	// smash command
-	// --------------------------------------------------------------
-	program
-		.command("smash", "encrypt/decrypt secrets")
-		.option("-e, --encrypt", "encrypt secrets")
-		.option("-d, --decrypt", "decrypt secrets")
-		.action(commands.smash);
-
-    
 	// --------------------------------------------------------------
 	// show command
 	// --------------------------------------------------------------
 	program
-		.command("show", "show config things...")
+		.command("show", "show configuration")
     .argument("[account]", "specify account from config (defaults to all)")
     .option("-c, --counts", "show message counts")
     .option("-f, --folders", "show folder counts")
@@ -56,12 +38,11 @@ try {
     .option("-z, --zero", "zero out unread count")
 		.action(commands.scan);
 
-
   // --------------------------------------------------------------
   // delete command
   // --------------------------------------------------------------
   program
-    .command("del", "delete email")
+    .command("delete", "delete email")
     .argument("[account]", "specify account from config (defaults to all)")
     .argument("[seq]", "sequence number(s) of email to delete, comma separated, hyphen for a range")
     .option("-e, --empty", "empty the trash + spam")
@@ -72,6 +53,22 @@ try {
     .option("-v, --verbose", "verbose mode")
     .action(commands.delete);
 
+  // --------------------------------------------------------------
+  // open command
+  // --------------------------------------------------------------
+  program.command("open", "open mail")
+    .argument("[what]", "specify mail progrm to run (defaults to outlook)")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.open);
+
+	// --------------------------------------------------------------
+	// smash command
+	// --------------------------------------------------------------
+	program
+		.command("smash", "encrypt/decrypt secrets")
+		.option("-e, --encrypt", "encrypt secrets")
+		.option("-d, --decrypt", "decrypt secrets")
+		.action(commands.smash);
 
   // todo: decide if we want to keep this
   // --------------------------------------------------------------

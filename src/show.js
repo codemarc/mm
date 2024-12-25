@@ -131,7 +131,7 @@ export const showCommand = async (args, options, logger) => {
   for (let count = 0; count < config.accounts.length; count++) {
     config.accounts[count].index = count + 1
   }
-
+  
   // list the accounts
   if (options.list) {
     listAccounts(config, options, logger)
@@ -143,7 +143,8 @@ export const showCommand = async (args, options, logger) => {
   if (options.verbose) logger.info(`account: ${options.account}`)
 
   // if count is specified then show the counts for the account
-  if (options.counts) {
+  if (options.counts || process.argv.length === 3) {
+    if(process.argv.length === 3)options.account="all"
     showCounts(config, options, logger)
     return
   }
