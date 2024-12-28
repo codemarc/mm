@@ -1,4 +1,5 @@
 # EditorConfig is awesome: https://EditorConfig.org
+# Biome Docs: https://biomejs.dev/reference/configuration
 
 # top-most EditorConfig file
 root = true

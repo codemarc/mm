@@ -4,39 +4,39 @@ import program from "caporal";
 import * as commands from "./src/commands.js";
 
 try {
-	program.name(pak.name);
-	program.version(pak.version);
-	program.description(pak.description);
+  program.name(pak.name);
+  program.version(pak.version);
+  program.description(pak.description);
 
-	// --------------------------------------------------------------
-	// show command
-	// --------------------------------------------------------------
-	program
-		.command("show", "show configuration")
+  // --------------------------------------------------------------
+  // show command
+  // --------------------------------------------------------------
+  program
+    .command("show", "show configuration")
     .argument("[account]", "specify account from config (defaults to all)")
     .option("-c, --counts", "show message counts")
     .option("-f, --folders", "show folder counts")
     .option("-l, --list", "show all accounts")
     .option("-q, --quiet", "quiet mode")
     .option("-v, --verbose", "verbose mode")
-		.action(commands.show);
+    .action(commands.show);
 
-	// --------------------------------------------------------------
-	// scan command
-	// --------------------------------------------------------------
-	program
-		.command("scan", "scan email folders")
+  // --------------------------------------------------------------
+  // scan command
+  // --------------------------------------------------------------
+  program
+    .command("scan", "scan email folders")
     .argument("[account]", "specify account from config (defaults to all)")
     .option("-f, --folder", "specify folder to scan (default: INBOX)")
     .option("-g, --archive", "specify archive folder, (default: All Mail or Archive)")
     .option("-l, --limit", "limit number of emails to scan (default: 3)")
     .option("-q, --quiet", "quiet mode")
-		.option("-r, --read", "mark emails as read")
-		.option("-s, --skip", "skip number of emails to scan (default: 0)")
-		.option("-u, --unread", "only show unread emails")
+    .option("-r, --read", "mark emails as read")
+    .option("-s, --skip", "skip number of emails to scan (default: 0)")
+    .option("-u, --unread", "only show unread emails")
     .option("-v, --verbose", "verbose mode")
     .option("-z, --zero", "zero out unread count")
-		.action(commands.scan);
+    .action(commands.scan);
 
   // --------------------------------------------------------------
   // delete command
@@ -44,16 +44,23 @@ try {
   program
     .command("delete", "delete email")
     .argument("[account]", "specify account from config (defaults to all)")
-    .argument("[seq]", "sequence number(s) of email to delete, comma separated, hyphen for a range")
-    .option("-e, --empty", "empty the trash + spam")
     .option("-f, --folder", "move content of the named folder to trash")
-    .option("-l, --limit", "limit number of emails to delete (used when seq is specified as -/+ n  (default: 1)")
+    .option("-i, --index", "index(s) of email to delete, comma separated, `:` for a range")
+    .option("-s, --seqno", "seqno(s) of email to delete, comma separated, `:` for a range")
     .option("-q, --quiet", "quiet mode")
-    .option("-t, --test", "dont actually delete")
     .option("-v, --verbose", "verbose mode")
     .action(commands.delete);
 
   // --------------------------------------------------------------
+  // clean command
+  // --------------------------------------------------------------
+  program.command("clean", "clean up mailboxes")
+    .argument("[account]", "specify account from config (defaults to all)")
+    .option("-q, --quiet", "quiet mode")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.clean);
+
+  // --------------------------------------------------------------  
   // open command
   // --------------------------------------------------------------
   program.command("open", "open mail")
@@ -61,14 +68,14 @@ try {
     .option("-v, --verbose", "verbose mode")
     .action(commands.open);
 
-	// --------------------------------------------------------------
-	// smash command
-	// --------------------------------------------------------------
-	program
-		.command("smash", "encrypt/decrypt secrets")
-		.option("-e, --encrypt", "encrypt secrets")
-		.option("-d, --decrypt", "decrypt secrets")
-		.action(commands.smash);
+  // --------------------------------------------------------------
+  // smash command
+  // --------------------------------------------------------------
+  program
+    .command("smash", "encrypt/decrypt secrets")
+    .option("-e, --encrypt", "encrypt secrets")
+    .option("-d, --decrypt", "decrypt secrets")
+    .action(commands.smash);
 
   // todo: decide if we want to keep this
   // --------------------------------------------------------------
@@ -83,12 +90,12 @@ try {
   //   .action(commands.read);
 
 
-  if(process.argv.length < 3){
+  if (process.argv.length < 3) {
     process.argv.push('-h')
   }
 
-	program.parse(process.argv);
+  program.parse(process.argv);
 } catch (e) {
-	console.error(e);
-	process.exit(1);
+  console.error(e);
+  process.exit(1);
 }

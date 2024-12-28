@@ -1,21 +1,36 @@
+// Description: Utility functions for the mailman CLI.
+// ImapFlow: https://imapflow.com/module-imapflow-ImapFlow.html
+// lodash: https://lodash.com/docs/4.17.15
 import { ImapFlow } from "imapflow";
 import _ from "lodash";
 import fs from "node:fs";
 import path from "node:path";
 import { decrypt } from "./smash.js";
+import chalk from "chalk";
+
+let loggerInstance = null
+let optionsInstance = null
+const setInstance = (iv) => { loggerInstance = iv.logger; optionsInstance = iv.options; }
+
+const info = (message) => {  if(!optionsInstance.quiet) {  (loggerInstance.info ?? console)(message)  } }
+const error = (message) => {  if(!optionsInstance.quiet) {  (loggerInstance.error ?? console)((chalk.red(message)))  } }  
+const verbose = (message) => {  if(!optionsInstance.quiet && optionsInstance.verbose) {  (loggerInstance.info ?? console)((chalk.blue(message)))  } }  
+
 
 /**
+ * ----------------------------------------------------------------------------
  * Retrieves an account from the provided configuration based on the given alias.
  *
  * @param {Object} config - The configuration object containing the accounts
  * @param {Array} config.accounts - Array of account configurations
  * @param {string|number|boolean} [alias] - The alias or index of the account to retrieve.
- *                                         If true or undefined, returns the first account
  * @returns {Object|undefined} The account object if found, undefined otherwise
+ * ---------------------------------------------------------------------------
  */
 const getAccount = (config, alias) => {
 	if (typeof alias === "boolean" || alias === undefined) {
-		return _.first(config.accounts);
+		// return _.first(config.accounts);
+    return undefined;
 	}
 	if (typeof alias === "string" && alias.length > 0) {
 		const acct = _.find(config.accounts, { account: alias });
@@ -31,15 +46,17 @@ const getAccount = (config, alias) => {
 };
 
 /**
+ * ----------------------------------------------------------------------------
  * Gets a comma-separated list of account names from the configuration
  *
  * @param {Object} config - The configuration object containing the accounts
  * @param {Array} config.accounts - Array of account configurations
  * @returns {Array<string>} Array of account names
+ * ----------------------------------------------------------------------------
  */
 const getAccountNames = (config) => {
 	const accounts = config?.accounts;
-  if(!accounts) return [];
+	if (!accounts) return [];
 	if (Array.isArray(accounts)) {
 		return _.get(config, "accounts", [])
 			.map((acc) => acc.account)
@@ -51,11 +68,13 @@ const getAccountNames = (config) => {
 };
 
 /**
+ * ----------------------------------------------------------------------------
  * Refreshes account filters by loading additional filter definitions from files
  *
  * @param {Object} account - The account configuration to refresh
  * @param {Array<string>} [account.filters] - Array of filter definitions
  * @returns {Promise<Object>} The updated account configuration
+ * ------------------------------------------------------------------------
  */
 const refreshFilters = async (account) => {
 	if (account.filters) {
@@ -77,6 +96,7 @@ const refreshFilters = async (account) => {
 };
 
 /**
+ * ----------------------------------------------------------------------------
  * Prints account names to the logger in either quiet or verbose mode
  *
  * @param {Object} config - The configuration object containing the accounts
@@ -84,6 +104,7 @@ const refreshFilters = async (account) => {
  * @param {boolean} options.quiet - Whether to print in quiet mode
  * @param {Object} logger - Logger instance
  * @param {Function} logger.info - Info logging function
+ * ------------------------------------------------------------------------
  */
 const printAccountNames = (config, options, logger) => {
 	const field = "account";
@@ -100,11 +121,13 @@ const printAccountNames = (config, options, logger) => {
 };
 
 /**
+ * ----------------------------------------------------------------------------
  * Rounds a date to the nearest minute
  *
  * @param {Date|string|number} date - Date to round
  * @returns {Date} New date object rounded to minutes
  * @throws {Error} If the date is invalid
+ * ------------------------------------------------------------------------
  */
 const roundToMinutes = (date) => {
 	const d = new Date(date);
@@ -121,6 +144,7 @@ const roundToMinutes = (date) => {
 };
 
 /**
+ * ----------------------------------------------------------------------------
  * Creates an ImapFlow instance for the given account
  *
  * @param {Object} account - Account configuration
@@ -133,6 +157,7 @@ const roundToMinutes = (date) => {
  * @param {boolean} options.verbose - Enable verbose logging
  * @param {Object} logger - Logger instance
  * @returns {ImapFlow} Configured ImapFlow instance
+ * ------------------------------------------------------------------------
  */
 export function getImapFlow(account, options, logger) {
 	return new ImapFlow({
@@ -144,11 +169,40 @@ export function getImapFlow(account, options, logger) {
 	});
 }
 
+/**
+ * ---------------------------------------------------------------------------- 
+ * Gets the correct folder path accounting for Gmail's special folder structure
+ * @param {Object} client - IMAP client instance
+ * @param {string} name - Folder name to look up
+ * @returns {Promise<string>} The correct folder path
+ * ----------------------------------------------------------------------------
+ * 
+*/
+const getFolderPath = async (client, name) => {
+  if(name === undefined || name.toLowerCase() === "inbox") {
+    return "INBOX"
+  }
+  const folders = await client.list()
+  if (name === "Archive") {
+    return _.find(folders, (f) => f.name === name)?.path ?? "[Gmail]/All Mail"
+  }
+  return _.find(folders, (f) => f.name === name)?.path
+}
+
+
+// ----------------------------------------------------------------------------
+// Exports
+// ----------------------------------------------------------------------------
 export default {
+  setInstance,
+  info,
+  error,
+  verbose,
 	getImapFlow,
 	getAccount,
 	getAccountNames,
 	refreshFilters,
 	printAccountNames,
 	roundToMinutes,
+  getFolderPath
 };

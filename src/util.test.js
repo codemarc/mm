@@ -13,13 +13,13 @@ const testConfig = {
 
 describe('getAccount', () => {
 
-  test('returns first account when alias is undefined', () => {
-    expect(u.getAccount(testConfig)).toEqual(testConfig.accounts[0]);
+  test('returns undefined when alias is undefined', () => {
+    expect(u.getAccount(testConfig)).toBeUndefined();
   });
 
-  test('returns first account when alias is boolean', () => {
-    expect(u.getAccount(testConfig, true)).toEqual(testConfig.accounts[0]);
-    expect(u.getAccount(testConfig, false)).toEqual(testConfig.accounts[0]);
+  test('returns undefined when alias is boolean', () => {
+    expect(u.getAccount(testConfig, true)).toBeUndefined();
+    expect(u.getAccount(testConfig, false)).toBeUndefined();
   });
 
   test('returns account matching string alias', () => {
@@ -49,10 +49,10 @@ describe('getAccount', () => {
   test('returns undefined for empty string', () => {
     expect(u.getAccount(testConfig, '')).toBeUndefined();
   });
-}); 
+});
 
 describe('getAccountNames', () => {
-  
+
   test('should return an array of account names', () => {
     const expected = ['personal', 'work', 'backup'];
     expect(u.getAccountNames(testConfig)).toEqual(expected);

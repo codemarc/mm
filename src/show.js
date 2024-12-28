@@ -126,11 +126,6 @@ const showFolders = async (config, options, logger) => {
 // ------------------------------------------------------------------------
 export const showCommand = async (args, options, logger) => {
   const config = load()
-
-  // add a index property to each account
-  for (let count = 0; count < config.accounts.length; count++) {
-    config.accounts[count].index = count + 1
-  }
   
   // list the accounts
   if (options.list) {

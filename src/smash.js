@@ -15,6 +15,12 @@ export const load = (cFile) => {
 	let config = {};
 	try {
 		config = yaml.load(fs.readFileSync(cFile ?? __configfile, "utf8"));
+
+  // add a index property to each account
+    for(let count=0;count < config.accounts.length;count++) {
+      config.accounts[count].index = count+1
+    }
+
 	} catch (e) {
 		console.warn(chalk.bgRedBright(`warning: ${e.message}`));
 	}

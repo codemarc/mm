@@ -6,16 +6,18 @@ A command-line tool for managing email accounts.
 
 - Manage multiple IMAP email accounts
 - Scan and read emails from the command line
-- Blacklist management for unwanted senders
+- Rules engine to organize content
 - Secure password encryption
 - Message metrics and account statistics
 - Mark messages as read/unread
-- Move blacklisted messages to separate folders
+- Automated hygiene 
+
+TODO: rules amd filters
 
 ## Installation
 
 ```bash
-npm install
+yarn install
 ```
 
 ## Usage
@@ -48,6 +50,12 @@ mm delete [account] [seq] [-e] [-f folder] [-l limit] [-q] [-t] [-v]
 Open mail client
 ```bash
 mm open [what] [-v]
+```
+
+### clean
+Good hygiene meand clean mailboxes
+```bash
+mm clean
 ```
 
 ### smash

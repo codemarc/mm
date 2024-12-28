@@ -1,260 +1,202 @@
-import chalk from "chalk";
-import _ from "lodash";
 import { load } from "./smash.js"
-import u from "./util.js";
+import chalk from "chalk"
+import u from "./util.js"
+const { setInstance, getAccount, info, error, verbose } = u
 
 /**
- * Gets the correct folder path accounting for Gmail's special folder structure
+ * Moves messages from specified folder to trash
  * @param {Object} client - IMAP client instance
- * @param {string} name - Folder name to look up
- * @returns {Promise<string>} The correct folder path
+ * @param {Array} seqnos - List of sequence numbers
+ * @param {Object} options - Command line options
  */
-const getFolderPath = async (client, name) => {
-  const folders = await client.list()
-  if (name === "Archive") {
-    return _.find(folders, (f) => f.name === name)?.path ?? "[Gmail]/All Mail"
+const mv2trash = async (client, seqnos, options) => {
+  let folder = "INBOX"
+  if (options.folder && typeof options.folder === "string") {
+    folder = options.folder
   }
-  return _.find(folders, (f) => f.name === name)?.path
-}
-
-// ------------------------------------------------------------------------ 
-// empty
-// ------------------------------------------------------------------------
-/**
- * Permanently deletes all messages in specified folder
- * @param {Object} client - IMAP client instance
- * @param {Object} logger - Logger instance
- * @param {string} folder - Folder name to empty
- */
-const empty = async (client, logger, folder) => {
-  const targ = await getFolderPath(client, folder)
-  const lock = await client.getMailboxLock(targ);
-	try {
-		// Search for all messages
-		const messages = await client.search({ all: true });
-		if (messages.length > 0) {
-			// Delete all messages found
-			await client.messageDelete(messages);
-			logger.info(
-        chalk.green(`Emptied ${targ} - ${messages.length} messages`),
-			);
-		} else {
-      logger.info(`${targ} is already empty`);
-		}
-	} finally {
-		lock.release();
-	}
-};
-
-
-// ------------------------------------------------------------------------
-// mark archive read
-// ------------------------------------------------------------------------
-/**
- * Marks all messages in Archive as read
- * @param {Object} client - IMAP client instance
- * @param {Object} logger - Logger instance
- */
-const markArchiveRead = async (client, logger) => {
-  const folder = await getFolderPath(client, "Archive")
-  const lock = await client.getMailboxLock(folder)
-  const searchCriteria = { unseen: true }
-  const unread = await client.search(searchCriteria)
-  if (unread.length > 0) {
-    // mark all messages as read
-    logger.info(`Marking ${unread.length} ${folder} as read`)
-    await client.messageFlagsAdd(unread, ["\\Seen"])
-  } else {
-    logger.info(`${folder} cleared`)
+  const trash = await u.getFolderPath(client, "Trash");
+  const src = await u.getFolderPath(client, folder);
+  if (src === undefined) {
+    error(`Folder ${folder} not found`)
+    return
   }
-  lock.release()
-}
+  if (trash === undefined) {
+    error(`Trash folder is not available`)
+    return
+  }
+  info(`moving messages from ${src} to ${trash}`);
+  const lock = await client.getMailboxLock(src);
 
-// ------------------------------------------------------------------------
-// trashem
-// ------------------------------------------------------------------------
-/**
- * Moves all messages from specified folder to trash
- * @param {Object} client - IMAP client instance
- * @param {boolean} verbose - Enable verbose logging
- * @param {Object} logger - Logger instance
- * @param {string} folder - Source folder name
- */
-const trashem = async (client, verbose, logger, folder) => {
-  const trash = await getFolderPath(client, "Trash")
-  if(verbose) logger.info(`trash: ${trash}`);
-
-	const lock = await client.getMailboxLock(folder);
-  if(verbose) logger.info(`folder: ${folder}`);
-
-	try {
-    // move all messages to trash
-    const messages = await client.search({ all: true });
-		if (messages.length > 0) {
-      await client.messageMove(messages, trash);
-      logger.info(chalk.green(`Moved ${messages.length} messages to Trash`));
-    } else {
-      logger.info(`${folder} is already empty`);
-    }
-	} finally {
-		lock.release();
-	}
-};
-
-// ------------------------------------------------------------------------
-// get client
-// ------------------------------------------------------------------------
-/**
- * Creates and connects an IMAP client
- * @param {Object} account - Account configuration
- * @param {Object} options - Command options
- * @param {Object} logger - Logger instance
- * @returns {Promise<Object|null>} Connected IMAP client or null on error
- */
-const getClient = async (account, options, logger) => {
   try {
-    const client = u.getImapFlow(account, options, logger);
-    if(!options.test)  {
-      await client.connect();
+
+    if (options.index) {
+      info(`index: true`)
+
+      const messages = (await client.search({ all: true }))?.reverse();
+      info(`${options.name}: ${messages.length.toLocaleString()} messages in ${folder}`);
+
+      let msglist = []
+      for (let i = 0; i < seqnos.length; i++) {
+        msglist.push(messages[seqnos[i] - 1])
+      }
+      verbose('messages for deletion')
+      verbose(msglist)
+
+      await client.messageMove(msglist, trash);
+      info(chalk.green(`Moved ${msglist.length} messages to ${trash}`));
+
+    } else {
+      info(`seqno: true`)
+      const messages = await client.search({ seq: seqnos })
+      info(`${options.name}: ${messages.length.toLocaleString()} messages in ${folder}`);
+      verbose('messages for deletion')
+      verbose(messages)
+
+      await client.messageFlagsAdd(messages, ['\\Deleted'])
+      // await client.messageDelete(messages);
+      await client.messageMove(messages, trash);
+      info(chalk.green(`Deleted ${messages.length} messages to ${trash}`));
     }
-    return client;
-  } catch (e) {
-    logger.error(chalk.red(`error: ${e}`));
-    return null;
+  } finally {
+    lock.release();
   }
 }
 
-// ------------------------------------------------------------------------
-// delete command
-// ------------------------------------------------------------------------
 /**
- * Main delete command handler
- * @param {Object} args - Command arguments
- * @param {Object} options - Command options
- * @param {Object} logger - Logger instance
+ * exands the sequence number selection into a list of sequence numbers
+ * 
+ * Use Cases
+ * mm delete 1 -s         // latest/last message
+ * mm delete 1 -s 2201    // message with seqno 2201
+ * mm delete 1 -s 28,29   // messages with seqno 28 and 29
+ * mm delete 1 -s 4:6     // messages with seqno 4, 5 and 6
+ * mm delete 1 -s 1:*     // all messages
+ * 
+ * @param {Object} options - Command line options
+ * return {Array} arSeq - List of sequence numbers
+  */
+const expandSeqnoSelecton = (options) => {
+  if (options.seqno) {
+    verbose("delete selection by seqno")
+
+    if (typeof options.seqno === "boolean") {
+      options.seqno = "*" // the latest
+    }
+  }
+  return options.seqno
+}
+
+/**
+ * exands the index selection into a list of index numbers
+ * 
+ * Use Cases
+ * mm delete 1 -i
+ * mm delete 1 -i 2
+ * mm delete 1 -i 1,2,3
+ * mm delete 1 -i 1-3
+ * mm delete 1 -i 1:3
+ * mm delete 1 -i 1:3,5,7-9
+ * 
+ * @param {Object} options - Command line options
+ * return {Array} arIndex - List of index numbers
+  */
+const expandIndexSelecton = (options) => {
+  let arIndex = []
+
+  if (options.index) {
+    verbose("delete selection by index")
+
+    // start by examining the index
+    if (typeof options.index === "boolean") {
+      options.index = "1"
+    }
+
+    // Handle comma-separated list like 1,2,3
+    let indexnos = options.index.split(",").map(s => s.trim());
+
+    arIndex = indexnos.flatMap((indexno) => {
+      const match = indexno.match(/^(\d+)-(\d+)$/);
+      if (match) {
+        const start = Number.parseInt(match[1]);
+        const end = Number.parseInt(match[2]);
+        return Array.from({ length: end - start + 1 }, (v, k) => k + start);
+      }
+      const match2 = indexno.match(/^(\d+):(\d+)$/);
+      if (match2) {
+        const start = Number.parseInt(match2[1]);
+        const end = start + Number.parseInt(match2[2]);
+        return Array.from({ length: end - start }, (v, k) => k + start);
+      }
+      return [Number.parseInt(indexno)];
+    });
+  }
+  return arIndex
+}
+
+/**
+ * ----------------------------------------------------------------------------
+ * Main command handler for the 'delete' command
+ * @param {Object} args - Command line arguments
+ * @param {Object} options - Command line options
+ * @param {Object} logger - Logger instance for output
+ * ----------------------------------------------------------------------------
  */
 export async function deleteCommand(args, options, logger) {
-	try {
-		const config = load();
+  setInstance({ options: options, logger: logger })
 
-    // add a index property to each account
-    for(let count=0;count < config.accounts.length;count++) {
-      config.accounts[count].index = count+1
-    }
+  try {
+    verbose("loading config")
+    const config = load()
 
     // if no account is specified then use the default account
-    options.account = args?.account ? args.account : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
-    if(options.verbose) logger.info(`account: ${options.account}`);
+    options.account = args?.account
+      ? args.account
+      : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
 
-
-    // if empty is true, empty all accounts
-    if(options.empty && options.account === "all") {
-      for(const account of config.accounts) {
-        logger.info(chalk.blue("\n\n------------------------------------------------"));
-        logger.info(chalk.blue(`${account.index}: ${account.account} ${account.user}`));
-        logger.info(chalk.blue("------------------------------------------------"));
-        const client = await getClient(account, options, logger);
-        if(client) {
-          await markArchiveRead(client, logger);
-          await empty(client, logger, "Drafts");
-          await empty(client, logger, "Trash");
-          await empty(client, logger, "Spam");
-          await client.logout();
-        }
-      }
-      return;
+    // if the account is all then throw an error
+    // all is not supported for the delete command
+    if (options.account === "all") {
+      error("'all' is not supported for the delete command")
+      return
     }
-    
-    const account = u.getAccount(config, options.account);
-		if (!account) {
-			logger.error(chalk.red("account not found"));
-			return;
-		}
-		logger.info(chalk.green(`deleting from account: ${account.account}`));
 
-		// Using seqno lets create the different use cases
-		// +n - last n messages
-		// -n - first n messages
-		// n-m - messages n to m
-		// n,m,o - messages n, m, o
-		let seqnos = [];
-		if (args.seq?.startsWith("+")) {
-			seqnos = [(-1 * Number.parseInt(args.seq.substr(1))).toString()];
-		} else if (args.seq?.startsWith("-")) {
-			seqnos = [args.seq];
-		} else if (args.seq?.substr(1).indexOf("-") > -1) {
-			seqnos = args.seq.split(",").map((s) => s.trim());
-		}
+    // otherwise find the selected account
+    verbose(`finding mailbox associated with ${options.account}`)
+    const account = getAccount(config, options.account)
+    if (!account) {
+      error(`${options.account} not found`)
+      return
+    }
+    verbose(`found ${account.user}`)
 
-		// for each seqno, expand it to a range if it contains a hyphen
-		// otherwise, just add it to the list
-		let expanded = seqnos.flatMap((seqno) => {
-			const match = seqno.match(/^(\d+)-(\d+)$/);
-			if (match) {
-				const start = Number.parseInt(match[1]);
-				const end = Number.parseInt(match[2]);
-				return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-			}
-			return [Number.parseInt(seqno)];
-		});
+    // check for both if the empty option is set then cleanup the account 
+    if (options.index && options.seqno) {
+      verbose(options)
+      error("Cannot specify both index and seqno")
+      return
+    }
 
-		if (expanded.length === 0) {
-			logger.info(chalk.red("no messages to delete"));
-		}
+    // ultimately queue up the messages to be deleted by sequence number
+    let seqnos = (options.index)
+      ? expandIndexSelecton(options)
+      : expandSeqnoSelecton(options)
 
-		if (options.test) {
-			logger.info(chalk.yellow("test mode, not actually deleting"));
-		}
+    if (seqnos.length === 0) {
+      error("No messages selected for deletion")
+      return
+    }
 
-    const client = await getClient(account, options, logger);
+    const client = u.getImapFlow(account, options, logger)
+    client.on('expunge', data => { verbose(data) })
 
-		if (expanded.length > 0) {
-			logger.info(
-				chalk.green(`moving messages to trash: ${expanded.join(", ")}`),
-			);
-			if (!options.test) {
-				const lock = await client.getMailboxLock("INBOX");
-				try {
-					if (expanded.length > 0) {
-						const messages = await client.search({ all: true });
-						if (options.limit) {
-							// Get n messages starting from the specified offset
-							expanded = Array.from(
-								{ length: options.limit },
-								(_, i) => messages[messages.length + expanded[0] - i],
-							).filter(Boolean);
-						} else {
-							expanded = messages[messages.length + expanded[0]];
-						}
-					}
-          const trash = await getFolderPath(client, "Trash")
-          await client.messageMove(expanded, trash);
-				} catch (err) {
-          logger.error(chalk.red(`error: ${err}`));
-				}
-				lock.release();
-			}
-		}
-
-
-		// move all messages to trash
-		if (options.folder && typeof options.folder === "string") {
-			await trashem(client, options.verbose, logger, options.folder);
-		} else if (options.folder && typeof options.folder === "boolean") {
-			await trashem(client, options.verbose, logger, "Blacklisted");
-		}
-
-		// empty trash and spam
-		if (options.empty) {
-      await markArchiveRead(client, logger);
-      await empty(client, logger, "Drafts");
-			await empty(client, logger, "Trash");
-			await empty(client, logger, "Spam");
-		}
-
-		// close connection
-		await client.logout();
-	} catch (e) {
-		logger.error(chalk.red(`error: ${e}`));
-	}
+    try {
+      verbose("connecting to imap server")
+      await client.connect()
+      await mv2trash(client, seqnos, { name: account.account, user: account.user, ...options })
+    } finally {
+      await client.close()
+    }
+  } catch (e) {
+    error(e)
+  }
 }
