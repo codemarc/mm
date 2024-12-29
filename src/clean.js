@@ -40,13 +40,14 @@ const empty = async (client, folder) => {
   info(`emptying ${folder} from ${targ}`)
   const lock = await client.getMailboxLock(targ)
   try {
-    const messages = await client.search({seq:"1:*"});
+    const messages = await client.search({ seq: "1:*" });
     if (messages.length > 0) {
       await client.messageDelete(messages)
       info(`emptied ${folder} - ${messages.length} messages`)
     } else {
       info(chalk.green(`${folder} is already empty`)
-)    }
+      )
+    }
   } finally {
     lock.release()
   }
@@ -63,11 +64,11 @@ const empty = async (client, folder) => {
  * @param {Object} logger - Logger instance
  * ----------------------------------------------------------------------------
  */
-const cleanup = async (account, options, logger) => {
+const cleanup = async (account) => {
   info(chalk.blue(`cleaning mailbox ${account.user}`))
 
-  const client = u.getImapFlow(account, options, logger)
-  client.on('expunge', data=>{verbose(data)})
+  const client = u.getImapFlow(account)
+  client.on('expunge', data => { verbose(data) })
 
   try {
     verbose("connecting to imap server")
@@ -100,13 +101,14 @@ export async function cleanCommand(args, options, logger) {
     // if no account is specified then use the default account
     options.account = args?.account
       ? args.account
-      : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
+      : u.dv.accountAlias
 
     // if the account is all then clean all accounts
-    if (options.account === "all") {
+    if (u.isAccountAll()) {
       verbose("cleaning all mailboxes")
+
       for (const account of config.accounts) {
-        await cleanup(account, options, logger)
+        await cleanup(account)
       }
       return
     }
@@ -119,7 +121,7 @@ export async function cleanCommand(args, options, logger) {
       return
     }
     verbose(`found ${account.user}`)
-    await cleanup(account, options, logger)
+    await cleanup(account)
   } catch (e) {
     error(e)
   }

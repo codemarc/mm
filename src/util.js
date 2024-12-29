@@ -12,10 +12,11 @@ let loggerInstance = null
 let optionsInstance = null
 const setInstance = (iv) => { loggerInstance = iv.logger; optionsInstance = iv.options; }
 
-const info = (message) => {  if(!optionsInstance.quiet) {  (loggerInstance.info ?? console)(message)  } }
-const error = (message) => {  if(!optionsInstance.quiet) {  (loggerInstance.error ?? console)((chalk.red(message)))  } }  
-const verbose = (message) => {  if(!optionsInstance.quiet && optionsInstance.verbose) {  (loggerInstance.info ?? console)((chalk.blue(message)))  } }  
+const info = (message) => { if (!optionsInstance.quiet) { (loggerInstance.info ?? console)(message) } }
+const error = (message) => { if (!optionsInstance.quiet) { (loggerInstance.error ?? console)((chalk.red(message))) } }
+const verbose = (message) => { if (!optionsInstance.quiet && optionsInstance.verbose) { (loggerInstance.info ?? console)((chalk.blue(message))) } }
 
+const isAccountAll = () => (optionsInstance.account === "all" || optionsInstance.account === "0")
 
 /**
  * ----------------------------------------------------------------------------
@@ -28,21 +29,21 @@ const verbose = (message) => {  if(!optionsInstance.quiet && optionsInstance.ver
  * ---------------------------------------------------------------------------
  */
 const getAccount = (config, alias) => {
-	if (typeof alias === "boolean" || alias === undefined) {
-		// return _.first(config.accounts);
+  if (typeof alias === "boolean" || alias === undefined) {
+    // return _.first(config.accounts);
     return undefined;
-	}
-	if (typeof alias === "string" && alias.length > 0) {
-		const acct = _.find(config.accounts, { account: alias });
-		if (acct) {
-			return acct;
-		}
-	}
-	const accno = Number.parseInt(alias);
-	if (Number.isNaN(accno) || accno.toString() !== alias) {
-		return undefined;
-	}
-	return config.accounts[accno - 1];
+  }
+  if (typeof alias === "string" && alias.length > 0) {
+    const acct = _.find(config.accounts, { account: alias });
+    if (acct) {
+      return acct;
+    }
+  }
+  const accno = Number.parseInt(alias);
+  if (Number.isNaN(accno) || accno.toString() !== alias) {
+    return undefined;
+  }
+  return config.accounts[accno - 1];
 };
 
 /**
@@ -55,16 +56,16 @@ const getAccount = (config, alias) => {
  * ----------------------------------------------------------------------------
  */
 const getAccountNames = (config) => {
-	const accounts = config?.accounts;
-	if (!accounts) return [];
-	if (Array.isArray(accounts)) {
-		return _.get(config, "accounts", [])
-			.map((acc) => acc.account)
-			.toString()
-			.split(",")
-			.filter(Boolean);
-	}
-	return Object.keys(accounts);
+  const accounts = config?.accounts;
+  if (!accounts) return [];
+  if (Array.isArray(accounts)) {
+    return _.get(config, "accounts", [])
+      .map((acc) => acc.account)
+      .toString()
+      .split(",")
+      .filter(Boolean);
+  }
+  return Object.keys(accounts);
 };
 
 /**
@@ -77,22 +78,22 @@ const getAccountNames = (config) => {
  * ------------------------------------------------------------------------
  */
 const refreshFilters = async (account) => {
-	if (account.filters) {
-		for (const filter of account.filters) {
-			const arf = filter.split(":");
-			const filename = path.join(
-				process.cwd(),
-				process.env.MM_FILTERS_PATH ?? "filters",
-				arf.reverse().join("."),
-			);
-			if (!fs.existsSync(filename)) {
-				continue;
-			}
-			const list = (await fs.promises.readFile(filename, "utf8")).split("\n");
-			account[arf[1]] = list.concat(account[arf[1]] ?? []);
-		}
-	}
-	return account;
+  if (account.filters) {
+    for (const filter of account.filters) {
+      const arf = filter.split(":");
+      const filename = path.join(
+        process.cwd(),
+        process.env.MM_FILTERS_PATH ?? "filters",
+        arf.reverse().join("."),
+      );
+      if (!fs.existsSync(filename)) {
+        continue;
+      }
+      const list = (await fs.promises.readFile(filename, "utf8")).split("\n");
+      account[arf[1]] = list.concat(account[arf[1]] ?? []);
+    }
+  }
+  return account;
 };
 
 /**
@@ -107,17 +108,17 @@ const refreshFilters = async (account) => {
  * ------------------------------------------------------------------------
  */
 const printAccountNames = (config, options, logger) => {
-	const field = "account";
-	if (options.quiet) {
-		logger.info(_.map(config.accounts, field).toString().replace(/,/g, "\n"));
-	} else {
-		const accounts = _.map(config.accounts, field).toString().split(",");
-		let count = 0;
-		for (const account of accounts) {
-			logger.info(`${count + 1}. ${account}`);
-			count++;
-		}
-	}
+  const field = "account";
+  if (options.quiet) {
+    logger.info(_.map(config.accounts, field).toString().replace(/,/g, "\n"));
+  } else {
+    const accounts = _.map(config.accounts, field).toString().split(",");
+    let count = 0;
+    for (const account of accounts) {
+      logger.info(`${count + 1}. ${account}`);
+      count++;
+    }
+  }
 };
 
 /**
@@ -130,17 +131,17 @@ const printAccountNames = (config, options, logger) => {
  * ------------------------------------------------------------------------
  */
 const roundToMinutes = (date) => {
-	const d = new Date(date);
-	if (Number.isNaN(d.getTime())) {
-		throw new Error("Invalid date");
-	}
-	return new Date(
-		d.getFullYear(),
-		d.getMonth(),
-		d.getDate(),
-		d.getHours(),
-		d.getMinutes(),
-	);
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) {
+    throw new Error("Invalid date");
+  }
+  return new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    d.getDate(),
+    d.getHours(),
+    d.getMinutes(),
+  );
 };
 
 /**
@@ -159,14 +160,14 @@ const roundToMinutes = (date) => {
  * @returns {ImapFlow} Configured ImapFlow instance
  * ------------------------------------------------------------------------
  */
-export function getImapFlow(account, options, logger) {
-	return new ImapFlow({
-		host: account.host,
-		port: account.port,
-		secure: account.tls !== false,
-		auth: { user: account.user, pass: decrypt(account.password, false) },
-		logger: options.verbose ? logger : false,
-	});
+export function getImapFlow(account) {
+  return new ImapFlow({
+    host: account.host,
+    port: account.port,
+    secure: account.tls !== false,
+    auth: { user: account.user, pass: decrypt(account.password, false) },
+    logger: optionsInstance.verbose ? loggerInstance : false,
+  });
 }
 
 /**
@@ -179,7 +180,7 @@ export function getImapFlow(account, options, logger) {
  * 
 */
 const getFolderPath = async (client, name) => {
-  if(name === undefined || name.toLowerCase() === "inbox") {
+  if (name === undefined || name.toLowerCase() === "inbox") {
     return "INBOX"
   }
   const folders = await client.list()
@@ -187,6 +188,16 @@ const getFolderPath = async (client, name) => {
     return _.find(folders, (f) => f.name === name)?.path ?? "[Gmail]/All Mail"
   }
   return _.find(folders, (f) => f.name === name)?.path
+}
+
+/**
+  * ----------------------------------------------------------------------------
+  * Default values for the CLI
+  * ----------------------------------------------------------------------------
+  */
+const dv = {
+  accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all",
+  scanLimit: process.env.MM_SCAN_LIMIT || 5
 }
 
 
@@ -198,11 +209,13 @@ export default {
   info,
   error,
   verbose,
-	getImapFlow,
-	getAccount,
-	getAccountNames,
-	refreshFilters,
-	printAccountNames,
-	roundToMinutes,
-  getFolderPath
+  getImapFlow,
+  isAccountAll,
+  getAccount,
+  getAccountNames,
+  refreshFilters,
+  printAccountNames,
+  roundToMinutes,
+  getFolderPath,
+  dv
 };

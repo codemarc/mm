@@ -1,121 +1,82 @@
 # Delete Command
 
-A powerful command for email management that handles message deletion, folder cleanup, and batch operations across multiple accounts.
+A powerful command for email management that handles selective message deletion by index or sequence numbers.
 
 ## Usage
 
 ```bash
-mm delete [account] [options] [seq]
+mm delete [account] [options]
 ```
 
-## Account Selection
+## Description
 
-- By alias: `mm delete work
-- By index: `mm delete 1` (index shown in account list)
-- All accounts: `mm delete all` 
+The delete command moves selected messages to the Trash folder using two selection methods:
+- Index-based selection: Select messages by their reverse chronological position 
+- Sequence-based selection: Select messages by their IMAP sequence numbers
+
+## Account Selection 
+
+- By alias: `mm delete work`
+- By index: `mm delete 1`
 - Default: Uses MM_DEFAULT_ACCOUNT if no account specified
+- Note: 'all' accounts mode is not supported for delete operations
 
-## Command Options
+## Options
 
-- `--account <alias|index|all>`: Target account selection
-  - Overrides positional account argument
-  - Examples: `delete work`, `delete 2`, `delete all`
+- `-i, --index`: Select messages by position index
+  - Single: `--index 1` (newest message)
+  - Multiple: `--index 1,2,3`
+  - Range with dash: `--index 1-3`
+  - Range with colon: `--index 1:3`
+  - Can combine: `--index 1:3,5,7-9`
 
-- `--empty`: Performs full cleanup
-  - Empties Trash, Spam, and Drafts folders
-  - Marks all Archive messages as read
-  - Safe to run regularly for maintenance
+- `-s, --seqno`: Select messages by IMAP sequence number
+  - Single: `--seqno 2201`
+  - Multiple: `--seqno 28,29`
+  - Range: `--seqno 4:6`
+  - All: `--seqno 1:*`
 
-- `--folder [name]`: Move folder contents to trash
-  - With name: `--folder "Newsletter"` moves specified folder
-  - Without name: `--folder` targets Blacklisted folder
-  - Preserves messages in trash for review
+- `-f, --folder`: Select source folder (default: INBOX)
+  - Example: `--folder "Newsletter"`
 
-- `--limit <n>`: Control batch size
-  - Works with sequence numbers
-  - Example: `delete +10 --limit 5` moves only 5 of last 10 messages
+- `-v, --verbose`: Enable detailed logging
+  - Shows message UIDs
+  - Logs move operations
+  - Shows folder paths
 
-- `--test`: Simulation mode
-  - Shows what would happen without making changes
-  - Useful for verifying sequence selections
+- `-q, --quiet`: Suppress non-error output
+  - Only shows critical errors
+  - Useful for scripts
 
-- `--verbose`: Detailed logging
-  - Shows folder paths and message counts
-  - Logs each operation as it occurs
+## Examples
 
-## Environment Variables
-
-- `MM_DEFAULT_ACCOUNT`: Sets default account when none specified
-  - Example: `export MM_DEFAULT_ACCOUNT="work"`
-  - Can be overridden by --account option
-
-## Message Selection
-
-### Sequence Number Formats
-- `+n`: Last n messages (newest)
-  ```bash
-  mm delete +5        # Move 5 newest messages to trash
-  mm delete +10 --test # Preview deletion of 10 newest
-  ```
-
-- `-n`: First n messages (oldest)
-  ```bash
-  mm delete -3        # Move 3 oldest messages to trash
-  ```
-
-- `n-m`: Message range
-  ```bash
-  mm delete 5-10      # Move messages 5 through 10 to trash
-  ```
-
-- `n,m,o`: Specific messages
-  ```bash
-  mm delete 1,3,5     # Move messages 1, 3, and 5 to trash
-  ```
-
-## Common Workflows
-
-### Account Maintenance
 ```bash
-# Clean all accounts
-mm delete --empty --account all
+# Delete newest message in default account
+mm delete --index 1
 
-# Clean specific account
-mm delete work --empty
+# Delete messages 1-3 from work account
+mm delete work --index 1-3
+
+# Delete by sequence numbers
+mm delete --seqno 2201,2202
+
+# Delete from specific folder
+mm delete --folder "Newsletter" --index 1:5
+
+# Delete with verbose logging
+mm delete --index 1 --verbose
 ```
 
-### Folder Management
-```bash
-# Empty newsletters folder
-mm delete --folder "Newsletters"
+## Notes
 
-# Empty blacklist folder
-mm delete --folder
+- Messages are moved to Trash folder, not permanently deleted
+- Can only operate on one account at a time
+- Index numbers are 1-based and count from newest to oldest
+- Invalid selections are reported as errors
+- Use verbose mode to preview operations
 
-# Preview folder cleanup
-mm delete --folder "Temp" --test
-```
+## See Also
 
-### Batch Operations
-```bash
-# Move last 20 messages, 5 at a time
-mm delete +20 --limit 5
-
-# Clean spam across accounts
-mm delete all --empty
-```
-
-## Error Handling
-
-- Invalid account: Displays "account not found" error
-- Empty selection: Shows "no messages to delete" warning
-- Connection issues: Logs error and exits gracefully
-- Folder access: Reports if folder cannot be accessed
-
-## Special Folders
-
-The command handles special folders differently:
-- `Archive`: Uses Gmail's "All Mail" folder if standard archive not found
-- `Trash`: Messages moved here are deleted on empty command
-- `Spam`: Automatically emptied with --empty flag
-- `Drafts`: Included in empty operation
+- `clean` - Full mailbox cleanup operations
+- `show` - View message details before deleting
+- `list` - Show account indexes

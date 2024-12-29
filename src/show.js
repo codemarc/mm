@@ -3,12 +3,15 @@ import cTable from "console.table"
 import { load } from "./smash.js"
 import chalk from "chalk"
 import u from "./util.js"
+const { setInstance, getAccount, info, error, verbose } = u
 
 // ------------------------------------------------------------------------
 // list the accounts
 // ------------------------------------------------------------------------
 const listAccounts = (config, options, logger) => {
   const accountNames = u.getAccountNames(config)
+
+  // must use logger directly to handle the quiet option
   if (options.quiet) {
     logger.info(accountNames.join('\n'))
     return
@@ -16,152 +19,191 @@ const listAccounts = (config, options, logger) => {
   // print the accounts
   const headers = ["index", "account", "user", "host", "port"]
   const values = _.map(config.accounts, (obj) => _.pick(obj, headers))
-  logger.info(cTable.getTable(values))
+  info(cTable.getTable(values))
   return
 }
 
-// ------------------------------------------------------------------------
-// show the counts for the account
-// ------------------------------------------------------------------------
-const showCounts = async (config, options, logger) => {
 
-  const getMetrics = async (account) => {
-    const client = u.getImapFlow(account, options, logger)
+// ------------------------------------------------------------------------
+// get the metrics for the account
+// ------------------------------------------------------------------------
+const getMetrics = async (account, options) => {
+  const client = u.getImapFlow(account)
+  try {
+    await client.connect()
+
+    let folder = "INBOX"
+    if (options.folder && typeof options.folder === "string") {
+      folder = options.folder
+    }
+
+    const src = await u.getFolderPath(client, folder);
+    if (src === undefined) {
+      error(`Folder ${account.account} ${folder} not found`)
+      return {}
+    }
+
+    verbose(`gathering metrics for ${account.account} ${src}`);
+    const lock = await client.getMailboxLock(src);
+
+    let rc = {}
     try {
-      await client.connect()
-      const lock = await client.getMailboxLock(options.folder ?? "INBOX")
       const unread = await client.search({ unseen: true })
       const total = await client.search({ all: true })
-      lock.release()
-      return {
+      rc = {
         index: account.index,
         account: account.account,
         username: account.user,
         unread: unread.length.toLocaleString(),
         total: total.length.toLocaleString(),
       }
+
     } catch (error) {
       logger.error(error)
     } finally {
-      await client.logout()
+      lock.release();
+      return rc
     }
-
+  } catch (err) {
+    error(err)
+  } finally {
+    await client.logout()
   }
+}
 
+
+// ------------------------------------------------------------------------
+// show the counts for the account
+// ------------------------------------------------------------------------
+const showCounts = async (config, options) => {
+  info("\n")
   // if the account is all then show the counts for all accounts
-  if (options.account === "all") {
-    const metrics = await Promise.all(
-      _.map(config.accounts, async (account) => {
-        return getMetrics(account)
-      })
-    )
-    logger.info(cTable.getTable(metrics))
+  if (u.isAccountAll()) {
+    const metrics = []
+    for (const account of config.accounts) {
+      const m = await getMetrics(account, options)
+      metrics.push(m)
+    }
+    info(cTable.getTable(metrics))
     return
   }
 
   // otherwise show the counts for the account
-  const account = u.getAccount(config, options.account)
+  const account = getAccount(config, options.account)
   if (!account) {
-    logger.error(chalk.red("not found\n"))
+    error(`account '${options.account}' not found\ncheck mm show -l for available accounts`)
     return
   }
-  const metrics = await getMetrics(account)
-  logger.info(cTable.getTable([metrics]))
+  const metrics = await getMetrics(account, options)
+  info(cTable.getTable([metrics]))
+}
+
+
+// ------------------------------------------------------------------------
+// get the folders for the account
+// ------------------------------------------------------------------------
+const getFolders = async (account, options) => {
+  const client = u.getImapFlow(account)
+  try {
+    await client.connect()
+
+    const folders = await client.list()
+    return {
+      index: account.index,
+      account: account.account,
+      username: account.user,
+      folders: folders,
+    }
+  } catch (error) {
+    error(error)
+  } finally {
+    await client.logout()
+  }
 }
 
 // ------------------------------------------------------------------------
 // show the folders for the account
 // ------------------------------------------------------------------------
-const showFolders = async (config, options, logger) => {
-  const getFolders = async (account) => {
-    const client = u.getImapFlow(account, options, logger)
-    try {
-      await client.connect()
+const showFolders = async (config, options) => {
 
-      const folders = await client.list()
-      return {
-        index: account.index,
-        account: account.account,
-        username: account.user,
-        folders: folders,
-      }
-    } catch (error) {
-      logger.error(error)
-    } finally {
-      await client.logout()
+  // if the account is all then show the folders for all accounts
+  if (u.isAccountAll()) {
+    for (const account of config.accounts) {
+      info(chalk.blue(`${account.index}: ${account.account}\n`));
+      const folders = await getFolders(account, options)
+
+      // const headers = ["path","pathAsListed","flags","delimiter","listed","parentPath","parent","name","subscribed","specialUse","specialUseSource"
+      const headers = ["path", "parent", "name", "specialUse", "specialUseSource"]
+      const values = _.map(folders.folders, (obj) => _.pick(obj, headers))
+      info(cTable.getTable(values))
     }
-  }
-
-  // if the account is all
-  if (options.account === "all") {
-    logger.error(chalk.red("show folders not implemented for all accounts"))
     return
   }
 
   // otherwise show the counts for the account
-  const account = u.getAccount(config, options.account)
+  const account = getAccount(config, options.account);
   if (!account) {
-    logger.error(chalk.red("not found\n"))
+    error(`account '${options.account}' not found\ncheck mm show -l for available accounts`)
     return
   }
-  const folders = await getFolders(account)
-  logger.info(chalk.blue(`\n${account.index}: ${account.account}\n`))
+  info(chalk.blue(`\n${account.index}: ${account.account}\n`));
 
-  // const headers = ["path","pathAsListed","flags","delimiter","listed","parentPath","parent","name","subscribed","specialUse","specialUseSource"
-  const headers = [
-    "path",
-    "parent",
-    "name",
-    "specialUse",
-    "specialUseSource",
-  ]
+  const folders = await getFolders(account, options)
+  const headers = ["path", "parent", "name", "specialUse", "specialUseSource"]
   const values = _.map(folders.folders, (obj) => _.pick(obj, headers))
-  logger.info(cTable.getTable(values))
+  info(cTable.getTable(values))
 }
-
-
 
 // ------------------------------------------------------------------------
 // Export the show command handler
 // ------------------------------------------------------------------------
 export const showCommand = async (args, options, logger) => {
-  const config = load()
-  
-  // list the accounts
-  if (options.list) {
-    listAccounts(config, options, logger)
-    return
+  setInstance({ options: options, logger: logger })
+
+  try {
+    verbose("loading config")
+    const config = load()
+
+    // list the accounts
+    if (options.list) {
+      listAccounts(config, options, logger)
+      return
+    }
+
+    // if no account is specified then use the default account
+    options.account = args?.account ? args.account : u.dv.accountAlias
+    verbose(`account: ${options.account}`)
+
+    // if count is specified then show the counts for the account
+    if (options.counts || process.argv.length === 3) {
+      if (process.argv.length === 3) options.account = "all"
+      showCounts(config, options)
+      return
+    }
+
+    if (options.folder) {
+      showFolders(config, options)
+      return
+    }
+
+    // if the account is all then show the fully loaded config
+    if (u.isAccountAll()) {
+      logger.info(config)
+      return
+    }
+
+    // otherwise show the config for the account
+    const account = getAccount(config, options.account)
+    if (!account) {
+      error(`account '${options.account}' not found\ncheck mm show -l for available accounts`)
+      return
+    }
+
+    info(account)
+    info("\n")
+
+  } catch (e) {
+    error(e)
   }
-
-  // if no account is specified then use the default account
-  options.account = args?.account ? args.account : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
-  if (options.verbose) logger.info(`account: ${options.account}`)
-
-  // if count is specified then show the counts for the account
-  if (options.counts || process.argv.length === 3) {
-    if(process.argv.length === 3)options.account="all"
-    showCounts(config, options, logger)
-    return
-  }
-
-  if (options.folders) {
-    showFolders(config, options, logger)
-    return
-  }
-
-  // if the account is all then show the fully loaded config
-  if (options.account === "all") {
-    logger.info(config)
-    return
-  }
-
-  // otherwise show the config for the account
-  const account = u.getAccount(config, options.account)
-  if (!account) {
-    logger.error(chalk.red("not found\n"))
-    return
-  }
-
-  logger.info(account)
-  logger.info("\n")
 }
+

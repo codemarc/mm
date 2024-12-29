@@ -151,11 +151,11 @@ export async function deleteCommand(args, options, logger) {
     // if no account is specified then use the default account
     options.account = args?.account
       ? args.account
-      : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
+      : u.dv.accountAlias
 
     // if the account is all then throw an error
     // all is not supported for the delete command
-    if (options.account === "all") {
+    if (u.isAccountAll()) {
       error("'all' is not supported for the delete command")
       return
     }
@@ -186,7 +186,7 @@ export async function deleteCommand(args, options, logger) {
       return
     }
 
-    const client = u.getImapFlow(account, options, logger)
+    const client = u.getImapFlow(account)
     client.on('expunge', data => { verbose(data) })
 
     try {

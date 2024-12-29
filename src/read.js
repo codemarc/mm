@@ -22,14 +22,14 @@ export async function readCommand(args, options, logger) {
       ? args.seq.split(',').map(s => s.trim())
       : ['-1'] // Default to last message
 
-    const client = u.getImapFlow(account, options, logger)
+    const client = u.getImapFlow(account)
 
     try {
       await client.connect()
       const lock = await client.getMailboxLock('INBOX')
 
       try {
-      // Apply unread filter if specified
+        // Apply unread filter if specified
         const searchCriteria = options.unread ? { unseen: true } : { all: true }
         const messages = await client.search(searchCriteria)
 

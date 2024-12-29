@@ -6,41 +6,8 @@ import u from "./util.js";
 const { setInstance, getAccount, info, error, verbose } = u
 
 /**
- * zeroUnread - Marks all unread messages in the client's mailbox as read.
- *
- * @param {Object} client - The IMAP client object with messageFlags methods
- * @param {Object} logger - Logger instance for output messages
- * @returns {Promise<void>} A promise that resolves when all messages are marked as read
- */
-async function zeroUnread(client, logger) {
-  const unread = await client.search({ unseen: true });
-  if (unread.length > 0) {
-    await client.messageFlagsAdd(unread, ["\\Seen"]);
-    logger.info(chalk.green(`Marked ${unread.length} messages as read`));
-  } else {
-    logger.info("No unread messages found");
-  }
-}
-
-/**
  * Main command handler for scanning email accounts and messages
  * Processes email scanning based on provided arguments and options
- *
- * @param {Object} args - Command line arguments
- * @param {string} [args.account] - Specific account to scan
- * @param {Object} options - Command options
- * @param {boolean} [options.verbose] - Enable verbose logging
- * @param {boolean} [options.quiet] - Suppress detailed output
- * @param {boolean} [options.read] - Mark messages as read
- * @param {boolean} [options.unread] - Only show unread messages
- * @param {boolean} [options.zero] - Zero out unread count
- * @param {string} [options.folder] - Target folder to scan
- * @param {boolean} [options.archive] - Use archive folder
- * @param {number} [options.limit] - Maximum messages to scan
- * @param {number} [options.skip] - Number of messages to skip
- * @param {Object} logger - Logger instance for output
- * @returns {Promise<void>} A promise that resolves when scanning is complete
- * @throws {Error} If scanning fails or account is not found
  */
 export async function scanCommand(args, options, logger) {
   setInstance({ options: options, logger: logger })
@@ -48,23 +15,22 @@ export async function scanCommand(args, options, logger) {
   try {
     verbose("loading config")
     const config = load();
+    const limit = Number.parseInt(args.limit || options.limit || process.env.LIMIT || "5");
+    const skip = Number.parseInt(options.skip || "0");
 
     // if no account is specified then use the default account
     options.account = args?.account
       ? args.account
-      : (process.env.MM_DEFAULT_ACCOUNT ?? "all")
+      : u.dv.accountAlias
 
     verbose(`account: ${options.account}`);
 
-    const limit = Number.parseInt(options.limit || process.env.LIMIT || "5");
-    const skip = Number.parseInt(options.skip || "0");
-
     // if the account is all
-    if (options.account === "all") {
+    if (u.isAccountAll()) {
       for (const account of config.accounts) {
-        logger.info(chalk.blue("\n\n------------------------------------------------"));
-        logger.info(chalk.blue(`${account.index}: ${account.account}`));
-        logger.info(chalk.blue("------------------------------------------------"));
+        info(chalk.blue("\n\n------------------------------------------------"));
+        info(chalk.blue(`${account.index}: ${account.account}`));
+        info(chalk.blue("------------------------------------------------"));
         const blacklist = account.blacklist ?? [];
         await scanMailbox(logger, account, limit, blacklist, skip, options);
       }
@@ -112,7 +78,7 @@ export async function scanCommand(args, options, logger) {
  */
 async function scanMailbox(logger, account, limit, blacklist, skip, options) {
   const qar = [];
-  const client = await u.getImapFlow(account, options, logger);
+  const client = await u.getImapFlow(account)
 
   try {
     // Connect to server
@@ -130,7 +96,13 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
     const lock = await client.getMailboxLock(folder);
     try {
       if (options.zero) {
-        await zeroUnread(client, logger);
+        const unread = await client.search({ unseen: true });
+        if (unread.length > 0) {
+          await client.messageFlagsAdd(unread, ["\\Seen"]);
+          info(chalk.green(`Marked ${unread.length} messages as read`));
+        } else {
+          info("No unread messages found");
+        }
       } else {
         // Modify search to include unread filter if specified
         const searchCriteria = options.unread

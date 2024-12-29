@@ -2,6 +2,8 @@
 import pak from "./package.json" assert { type: "json" };
 import program from "caporal";
 import * as commands from "./src/commands.js";
+import { dv } from "./src/utils.js";
+
 
 try {
   program.name(pak.name);
@@ -15,7 +17,7 @@ try {
     .command("show", "show configuration")
     .argument("[account]", "specify account from config (defaults to all)")
     .option("-c, --counts", "show message counts")
-    .option("-f, --folders", "show folder counts")
+    .option("-f, --folder", "show folder or  counts")
     .option("-l, --list", "show all accounts")
     .option("-q, --quiet", "quiet mode")
     .option("-v, --verbose", "verbose mode")
@@ -26,10 +28,12 @@ try {
   // --------------------------------------------------------------
   program
     .command("scan", "scan email folders")
-    .argument("[account]", "specify account from config (defaults to all)")
+    .argument("[account]", `specify account from config (defaults: ${dv.accountAlias})`)
+    .argument("[limit]", `limit number of emails to scan (default: ${dv.scanLimit})`)
+    .option("-a, --archive", "specify archive folder, (default: All Mail or Archive)")
     .option("-f, --folder", "specify folder to scan (default: INBOX)")
     .option("-g, --archive", "specify archive folder, (default: All Mail or Archive)")
-    .option("-l, --limit", "limit number of emails to scan (default: 3)")
+    .option("-l, --limit", `limit number of emails to scan (default: ${dv.scanLimit})`)
     .option("-q, --quiet", "quiet mode")
     .option("-r, --read", "mark emails as read")
     .option("-s, --skip", "skip number of emails to scan (default: 0)")

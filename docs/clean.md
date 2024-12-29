@@ -25,10 +25,13 @@ The clean command performs the following operations:
 
 ## Options
 
-- `--verbose`: Enables detailed logging
+- `-v, --verbose`: Enables detailed logging
   - Shows folder paths
   - Logs expunge operations
   - Shows connection details
+- `-q, --quiet`: Suppresses all non-error output
+  - Only shows critical errors
+  - Useful for scripting
 
 ## Environment Variables
 
@@ -47,8 +50,8 @@ mm clean work
 # Clean all accounts with verbose logging
 mm clean all --verbose
 
-# Clean account by index
-mm clean 1
+# Clean account by index quietly
+mm clean 1 --quiet
 ```
 
 ## Exit Status
@@ -57,7 +60,13 @@ mm clean 1
 - Returns error message if account not found
 - Returns error message on connection failures
 
+## Notes
+
+- Use with caution - deletions are permanent
+- Quiet mode suitable for cron jobs and automation
+
 ## See Also
 
 - `delete` - More selective deletion options
 - `list` - List configured accounts
+- `show` - View account settings
