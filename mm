@@ -2,8 +2,7 @@
 import pak from "./package.json" assert { type: "json" };
 import program from "caporal";
 import * as commands from "./src/commands.js";
-import { dv } from "./src/utils.js";
-
+import { dv } from "./src/util.js"
 
 try {
   program.name(pak.name);

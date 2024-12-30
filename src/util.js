@@ -1,22 +1,38 @@
 // Description: Utility functions for the mailman CLI.
 // ImapFlow: https://imapflow.com/module-imapflow-ImapFlow.html
 // lodash: https://lodash.com/docs/4.17.15
-import { ImapFlow } from "imapflow";
-import _ from "lodash";
-import fs from "node:fs";
-import path from "node:path";
-import { decrypt } from "./smash.js";
-import chalk from "chalk";
+import { ImapFlow } from "imapflow"
+import _ from "lodash"
+import fs from "node:fs"
+import path from "node:path"
+import { decrypt } from "./smash.js"
+import chalk from "chalk"
 
 let loggerInstance = null
 let optionsInstance = null
-const setInstance = (iv) => { loggerInstance = iv.logger; optionsInstance = iv.options; }
 
-const info = (message) => { if (!optionsInstance.quiet) { (loggerInstance.info ?? console)(message) } }
-const error = (message) => { if (!optionsInstance.quiet) { (loggerInstance.error ?? console)((chalk.red(message))) } }
-const verbose = (message) => { if (!optionsInstance.quiet && optionsInstance.verbose) { (loggerInstance.info ?? console)((chalk.blue(message))) } }
-
-const isAccountAll = () => (optionsInstance.account === "all" || optionsInstance.account === "0")
+export function setInstance(iv) {
+  loggerInstance = iv.logger
+  optionsInstance = iv.options
+}
+export function info(message) {
+  if (!optionsInstance.quiet) {
+    ;(loggerInstance.info ?? console)(message)
+  }
+}
+export function error(message) {
+  if (!optionsInstance.quiet) {
+    ;(loggerInstance.error ?? console)(chalk.red(message))
+  }
+}
+export function verbose(message) {
+  if (!optionsInstance.quiet && optionsInstance.verbose) {
+    ;(loggerInstance.info ?? console)(chalk.blue(message))
+  }
+}
+export function isAccountAll() {
+  return optionsInstance.account === "all" || optionsInstance.account === "0"
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -28,23 +44,23 @@ const isAccountAll = () => (optionsInstance.account === "all" || optionsInstance
  * @returns {Object|undefined} The account object if found, undefined otherwise
  * ---------------------------------------------------------------------------
  */
-const getAccount = (config, alias) => {
+export function getAccount(config, alias) {
   if (typeof alias === "boolean" || alias === undefined) {
     // return _.first(config.accounts);
-    return undefined;
+    return undefined
   }
   if (typeof alias === "string" && alias.length > 0) {
-    const acct = _.find(config.accounts, { account: alias });
+    const acct = _.find(config.accounts, { account: alias })
     if (acct) {
-      return acct;
+      return acct
     }
   }
-  const accno = Number.parseInt(alias);
+  const accno = Number.parseInt(alias)
   if (Number.isNaN(accno) || accno.toString() !== alias) {
-    return undefined;
+    return undefined
   }
-  return config.accounts[accno - 1];
-};
+  return config.accounts[accno - 1]
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -55,18 +71,18 @@ const getAccount = (config, alias) => {
  * @returns {Array<string>} Array of account names
  * ----------------------------------------------------------------------------
  */
-const getAccountNames = (config) => {
-  const accounts = config?.accounts;
-  if (!accounts) return [];
+export function getAccountNames(config) {
+  const accounts = config?.accounts
+  if (!accounts) return []
   if (Array.isArray(accounts)) {
     return _.get(config, "accounts", [])
       .map((acc) => acc.account)
       .toString()
       .split(",")
-      .filter(Boolean);
+      .filter(Boolean)
   }
-  return Object.keys(accounts);
-};
+  return Object.keys(accounts)
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -77,24 +93,24 @@ const getAccountNames = (config) => {
  * @returns {Promise<Object>} The updated account configuration
  * ------------------------------------------------------------------------
  */
-const refreshFilters = async (account) => {
+export async function refreshFilters(account) {
   if (account.filters) {
     for (const filter of account.filters) {
-      const arf = filter.split(":");
+      const arf = filter.split(":")
       const filename = path.join(
         process.cwd(),
         process.env.MM_FILTERS_PATH ?? "filters",
-        arf.reverse().join("."),
-      );
+        arf.reverse().join(".")
+      )
       if (!fs.existsSync(filename)) {
-        continue;
+        continue
       }
-      const list = (await fs.promises.readFile(filename, "utf8")).split("\n");
-      account[arf[1]] = list.concat(account[arf[1]] ?? []);
+      const list = (await fs.promises.readFile(filename, "utf8")).split("\n")
+      account[arf[1]] = list.concat(account[arf[1]] ?? [])
     }
   }
-  return account;
-};
+  return account
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -107,19 +123,19 @@ const refreshFilters = async (account) => {
  * @param {Function} logger.info - Info logging function
  * ------------------------------------------------------------------------
  */
-const printAccountNames = (config, options, logger) => {
-  const field = "account";
+export function printAccountNames(config, options, logger) {
+  const field = "account"
   if (options.quiet) {
-    logger.info(_.map(config.accounts, field).toString().replace(/,/g, "\n"));
+    logger.info(_.map(config.accounts, field).toString().replace(/,/g, "\n"))
   } else {
-    const accounts = _.map(config.accounts, field).toString().split(",");
-    let count = 0;
+    const accounts = _.map(config.accounts, field).toString().split(",")
+    let count = 0
     for (const account of accounts) {
-      logger.info(`${count + 1}. ${account}`);
-      count++;
+      logger.info(`${count + 1}. ${account}`)
+      count++
     }
   }
-};
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -130,19 +146,19 @@ const printAccountNames = (config, options, logger) => {
  * @throws {Error} If the date is invalid
  * ------------------------------------------------------------------------
  */
-const roundToMinutes = (date) => {
-  const d = new Date(date);
+export function roundToMinutes(date) {
+  const d = new Date(date)
   if (Number.isNaN(d.getTime())) {
-    throw new Error("Invalid date");
+    throw new Error("Invalid date")
   }
   return new Date(
     d.getFullYear(),
     d.getMonth(),
     d.getDate(),
     d.getHours(),
-    d.getMinutes(),
-  );
-};
+    d.getMinutes()
+  )
+}
 
 /**
  * ----------------------------------------------------------------------------
@@ -166,20 +182,20 @@ export function getImapFlow(account) {
     port: account.port,
     secure: account.tls !== false,
     auth: { user: account.user, pass: decrypt(account.password, false) },
-    logger: optionsInstance.verbose ? loggerInstance : false,
-  });
+    logger: optionsInstance.verbose ? loggerInstance : false
+  })
 }
 
 /**
- * ---------------------------------------------------------------------------- 
+ * ----------------------------------------------------------------------------
  * Gets the correct folder path accounting for Gmail's special folder structure
  * @param {Object} client - IMAP client instance
  * @param {string} name - Folder name to look up
  * @returns {Promise<string>} The correct folder path
  * ----------------------------------------------------------------------------
- * 
-*/
-const getFolderPath = async (client, name) => {
+ *
+ */
+export async function getFolderPath(client, name) {
   if (name === undefined || name.toLowerCase() === "inbox") {
     return "INBOX"
   }
@@ -191,15 +207,14 @@ const getFolderPath = async (client, name) => {
 }
 
 /**
-  * ----------------------------------------------------------------------------
-  * Default values for the CLI
-  * ----------------------------------------------------------------------------
-  */
-const dv = {
+ * ----------------------------------------------------------------------------
+ * Default values for the CLI
+ * ----------------------------------------------------------------------------
+ */
+export const dv = {
   accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all",
-  scanLimit: process.env.MM_SCAN_LIMIT || 5
+  scanLimit: process.env.MM_SCAN_LIMIT || "5"
 }
-
 
 // ----------------------------------------------------------------------------
 // Exports
@@ -218,4 +233,4 @@ export default {
   roundToMinutes,
   getFolderPath,
   dv
-};
+}

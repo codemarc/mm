@@ -1,55 +1,51 @@
-import { exec } from "node:child_process";
-import chalk from "chalk"
-
-/**
- * Opens the specified email client based on the platform.
- * Currently only supports opening Outlook on Windows and macOS.
- *
- * @param {Object} args - The command arguments
- * @param {string} [args.what='outlook'] - The email client to open
- * @param {Object} options - The command options
- * @param {boolean} [options.verbose] - Enable verbose logging
- * @param {Object} logger - The logger object
- * @param {Function} logger.info - Function to log information
- * @param {Function} logger.error - Function to log errors
- * @returns {Promise<void>}
- *
- */
+import { exec } from "node:child_process"
+import { setInstance, verbose, error } from "./util.js"
 
 const LAUNCHERROR = Object.freeze({
-	UNSUPPORTED_PLATFORM: "launch not supported on this platform",
-	UNSUPPORTED_CLIENT: "Unsupported email client",
-});
+  UNSUPPORTED_PLATFORM: "launch not supported on this platform",
+  UNSUPPORTED_CLIENT: "done know what that is"
+})
 
 const launch = {
-	outlook: {
-		win32: "start outlook",
-		darwin: "open -a Microsoft\\ Outlook",
-	},
-};
+  outlook: {
+    win32: "start outlook",
+    darwin: "open -a Microsoft\\ Outlook"
+  },
+  linkedin: {
+    win32: "start https://www.linkedin.com",
+    darwin: "open https://www.linkedin.com"
+  }
+}
 
 export async function openCommand(args, options, logger) {
-	const what = args.what ?? "outlook";
-	const platform = process.platform;
+  setInstance({ options: options, logger: logger })
 
-	if (options.verbose) {
-		logger.info(`what: ${what}`);
-		logger.info(`platform: ${platform}`);
-	}
+  const what = args.what ?? "outlook"
+  verbose(`what: ${what}`)
 
-	try {
-		switch (what) {
-			case "outlook":
-				if (platform === "win32" || platform === "darwin") {
-					exec(launch.outlook[platform]);
-				} else {
-					throw new Error(LAUNCHERROR.UNSUPPORTED_PLATFORM);
-				}
-				break;
-			default:
-				throw new Error(LAUNCHERROR.UNSUPPORTED_CLIENT);
-		}
-	} catch (err) {
-		logger.error(chalk.red(err.message));
-	}
+  const platform = process.platform
+  verbose(`platform: ${platform}`)
+
+  try {
+    switch (what) {
+      case "outlook":
+        if (platform === "win32" || platform === "darwin") {
+          exec(launch.outlook[platform])
+        } else {
+          throw new Error(LAUNCHERROR.UNSUPPORTED_PLATFORM)
+        }
+        break
+      case "li":
+        if (platform === "win32" || platform === "darwin") {
+          exec(launch.linkedin[platform])
+        } else {
+          throw new Error(LAUNCHERROR.UNSUPPORTED_PLATFORM)
+        }
+        break
+      default:
+        throw new Error(LAUNCHERROR.UNSUPPORTED_CLIENT)
+    }
+  } catch (err) {
+    error(err)
+  }
 }

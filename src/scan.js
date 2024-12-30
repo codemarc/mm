@@ -3,7 +3,7 @@ import _ from "lodash";
 import { simpleParser } from "mailparser";
 import { load } from "./smash.js"
 import u from "./util.js";
-const { setInstance, getAccount, info, error, verbose } = u
+const { setInstance, getAccount, info, error, verbose, dv } = u
 
 /**
  * Main command handler for scanning email accounts and messages
@@ -15,13 +15,13 @@ export async function scanCommand(args, options, logger) {
   try {
     verbose("loading config")
     const config = load();
-    const limit = Number.parseInt(args.limit || options.limit || process.env.LIMIT || "5");
+    const limit = Number.parseInt(args.limit || options.limit || dv.scanLimit);
     const skip = Number.parseInt(options.skip || "0");
 
     // if no account is specified then use the default account
     options.account = args?.account
       ? args.account
-      : u.dv.accountAlias
+      : dv.accountAlias
 
     verbose(`account: ${options.account}`);
 
@@ -38,10 +38,10 @@ export async function scanCommand(args, options, logger) {
     }
 
     // otherwise show the counts for the account
-    const account = u.getAccount(config, options.account);
+    const account = getAccount(config, options.account);
 
     if (!account) {
-      logger.error(chalk.red("account not found"));
+      error("account not found");
       return;
     }
 
@@ -49,9 +49,8 @@ export async function scanCommand(args, options, logger) {
     const blacklist = account.blacklist ?? [];
     await scanMailbox(logger, account, limit, blacklist, skip, options);
 
-  } catch (error) {
-    logger.error("Scan command failed:", error.message);
-    process.exit(1);
+  } catch (err) {
+    error(err)
   }
 }
 
