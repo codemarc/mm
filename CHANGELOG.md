@@ -1,5 +1,23 @@
 # Mailminder Changelog
 
+# Mailminder Changelog
+
+## [0.0.6] - 2024
+### Added
+- Enhanced unit test coverage for core functionality
+- Improved mock implementations for IMAP operations
+- Better handling of account configurations
+
+### Changed
+- Refactored clean command implementation
+- Updated utility functions for better testability
+- Streamlined account management logic
+
+### Fixed
+- Account validation and error handling improvements
+- Mock function implementation in tests
+- IMAP flow control and connection management
+
 ## [0.0.5] - 2024
 ### Added
 - Support for multiple email account management
