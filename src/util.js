@@ -15,8 +15,9 @@ export function setInstance(iv) {
   loggerInstance = iv.logger
   optionsInstance = iv.options
 }
+
 export function info(message) {
-  if (!optionsInstance.quiet) {
+  if (!optionsInstance.quiet && !optionsInstance.brief) {
     ;(loggerInstance.info ?? console)(message)
   }
 }
@@ -30,6 +31,12 @@ export function verbose(message) {
     ;(loggerInstance.info ?? console)(chalk.blue(message))
   }
 }
+export function brief(message) {
+  if (optionsInstance.brief) {
+    ;(loggerInstance.info ?? console)(chalk.green(message))
+  }
+}
+
 export function isAccountAll() {
   return optionsInstance.account === "all" || optionsInstance.account === "0"
 }
@@ -151,13 +158,7 @@ export function roundToMinutes(date) {
   if (Number.isNaN(d.getTime())) {
     throw new Error("Invalid date")
   }
-  return new Date(
-    d.getFullYear(),
-    d.getMonth(),
-    d.getDate(),
-    d.getHours(),
-    d.getMinutes()
-  )
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes())
 }
 
 /**
@@ -224,6 +225,7 @@ export default {
   info,
   error,
   verbose,
+  brief,
   getImapFlow,
   isAccountAll,
   getAccount,

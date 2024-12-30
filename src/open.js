@@ -11,6 +11,10 @@ const launch = {
     win32: "start outlook",
     darwin: "open -a Microsoft\\ Outlook"
   },
+  gmail: {
+    win32: "start chrome https://mail.google.com",
+    darwin: "open https://mail.google.com"
+  },
   linkedin: {
     win32: "start https://www.linkedin.com",
     darwin: "open https://www.linkedin.com"
@@ -42,6 +46,14 @@ export async function openCommand(args, options, logger) {
           throw new Error(LAUNCHERROR.UNSUPPORTED_PLATFORM)
         }
         break
+      case "gmail":
+        if (platform === "win32" || platform === "darwin") {
+          exec(launch.gmail[platform])
+        } else {
+          throw new Error(LAUNCHERROR.UNSUPPORTED_PLATFORM)
+        }
+        break
+
       default:
         throw new Error(LAUNCHERROR.UNSUPPORTED_CLIENT)
     }

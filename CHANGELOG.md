@@ -1,7 +1,5 @@
 # Mailminder Changelog
 
-# Mailminder Changelog
-
 ## [0.0.6] - 2024
 ### Added
 - Enhanced unit test coverage for core functionality

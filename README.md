@@ -102,7 +102,7 @@ MIT License - See LICENSE file
 
 ## Links
 
-- [Documentation](docs/)
+- [Documentation](docs/commands.md)
 - [Issue Tracker](https://github.com/yourusername/mm/issues)
 - [Author Website](https://codemarc.net)
 
