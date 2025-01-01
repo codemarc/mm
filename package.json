@@ -1,7 +1,7 @@
 {
   "name": "@codemarc/mm",
-  "version": "0.0.6",
-  "description": "mail minder - tech to manage your inbox",
+  "version": "0.0.7",
+  "description": "mail minder - code to manage your inbox",
   "main": "mm",
   "type": "module",
   "license": "MIT",

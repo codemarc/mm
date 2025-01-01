@@ -1,0 +1,13 @@
+version: 1
+accounts:
+  - account: birdie
+    type: imap
+    user: abirdietoldme@gmail.com
+    password: tweettweet
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    filters:
+      - recommendations@discover.pinterest.com
+      - blacklist:birdie
+    index: 1

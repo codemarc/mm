@@ -5,7 +5,7 @@ import * as commands from "./src/commands.js"
 import { dv } from "./src/util.js"
 
 try {
-  program.name(pak.name)
+  program.name(pak.name.slice(pak.name.indexOf("/") + 1))
   program.version(pak.version)
   program.description(pak.description)
 

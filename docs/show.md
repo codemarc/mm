@@ -1,88 +1,53 @@
 # Show Command
 
-A command for displaying account information, folder structures, and email statistics.
+Display detailed information about messages and accounts.
 
 ## Usage
 
 ```bash
-mm show [account] [options]
+mm show [target] [options]
 ```
 
 ## Description
 
-The show command provides several views into account configurations and email stats:
-- List all configured accounts with connection details
-- Show folder structures for selected accounts
-- Display unread and total message counts
-- View full account configurations
-
-## Account Selection
-
-- By alias: `mm show work`
-- By index: `mm show 1` 
-- All accounts: `mm show all`
-- Default: Uses MM_DEFAULT_ACCOUNT if no account specified
+The show command can display:
+- Message contents by index or sequence number
+- Account settings and status
+- Folder statistics and quotas
 
 ## Options
 
-- `-l, --list`: List all configured accounts
-  - Shows index numbers
-  - Displays connection details
-  - Basic account info
-
-- `-c, --counts`: Show message statistics
-  - Total message count
-  - Unread message count
-  - Per account metrics
-
-- `-f, --folder`: Display folder structure
-  - Shows folder hierarchy
-  - Lists special folders
-  - Indicates folder types
-
-- `-v, --verbose`: Enable detailed logging
-  - Shows IMAP operations
-  - Logs connection details
-  - Debug information
-
-- `-q, --quiet`: Suppress non-essential output
-  - Only account names
-  - One per line format
-  - Suitable for scripting
+- `-i, --index`: Show message by index position
+- `-s, --seqno`: Show message by sequence number
+- `-f, --folder`: Select source folder (default: INBOX)
+- `-v, --verbose`: Show raw message headers
+- `-q, --quiet`: Show only message body
 
 ## Examples
 
 ```bash
-# List all accounts
-mm show -l
+# Show newest message
+mm show --index 1
 
-# Show message counts for default account
-mm show -c
+# Show specific message
+mm show --seqno 2201
 
-# Display folder structure for work account
-mm show work -f
+# Show account details
+mm show work
 
-# Show counts across all accounts
-mm show all -c
-
-# List accounts in quiet mode
-mm show -l -q
+# Show folder stats
+mm show --folder Archive
 ```
 
-## Exit Status
+## Output Format
 
-- Returns 0 on success
-- Returns error if account not found
-- Returns error on connection failures
-
-## Environment Variables
-
-- `MM_DEFAULT_ACCOUNT`: Sets default account
-  - Used when no account specified
-  - Example: `export MM_DEFAULT_ACCOUNT="work"`
+Message display includes:
+- Headers (From, To, Subject, Date)
+- Content type and encoding
+- Message body (text or HTML)
+- Attachments list
 
 ## See Also
 
-- `clean` - Mailbox maintenance
-- `delete` - Message deletion
-- `scan` - Message scanning
+- [scan](./scan.md) - List messages
+- [commands](./commands.md)

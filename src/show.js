@@ -13,7 +13,7 @@ const listAccounts = (config, options, logger) => {
 
   // must use logger directly to handle the quiet option
   if (options.quiet) {
-    logger.info(accountNames.join('\n'))
+    logger.info(accountNames.join("\n"))
     return
   }
   // print the accounts
@@ -22,7 +22,6 @@ const listAccounts = (config, options, logger) => {
   info(cTable.getTable(values))
   return
 }
-
 
 // ------------------------------------------------------------------------
 // get the metrics for the account
@@ -37,14 +36,14 @@ const getMetrics = async (account, options) => {
       folder = options.folder
     }
 
-    const src = await u.getFolderPath(client, folder);
+    const src = await u.getFolderPath(client, folder)
     if (src === undefined) {
       error(`Folder ${account.account} ${folder} not found`)
       return {}
     }
 
-    verbose(`gathering metrics for ${account.account} ${src}`);
-    const lock = await client.getMailboxLock(src);
+    verbose(`gathering metrics for ${account.account} ${src}`)
+    const lock = await client.getMailboxLock(src)
 
     let rc = {}
     try {
@@ -55,22 +54,20 @@ const getMetrics = async (account, options) => {
         account: account.account,
         username: account.user,
         unread: unread.length.toLocaleString(),
-        total: total.length.toLocaleString(),
+        total: total.length.toLocaleString()
       }
-
     } catch (error) {
       logger.error(error)
     } finally {
-      lock.release();
+      lock.release()
       return rc
     }
   } catch (err) {
-    error(err)
+    error(err?.responseText ?? err)
   } finally {
     await client.logout()
   }
 }
-
 
 // ------------------------------------------------------------------------
 // show the counts for the account
@@ -95,9 +92,8 @@ const showCounts = async (config, options) => {
     return
   }
   const metrics = await getMetrics(account, options)
-  info(cTable.getTable([metrics]))
+  if (metrics) info(cTable.getTable([metrics]))
 }
-
 
 // ------------------------------------------------------------------------
 // get the folders for the account
@@ -112,7 +108,7 @@ const getFolders = async (account, options) => {
       index: account.index,
       account: account.account,
       username: account.user,
-      folders: folders,
+      folders: folders
     }
   } catch (error) {
     error(error)
@@ -125,11 +121,10 @@ const getFolders = async (account, options) => {
 // show the folders for the account
 // ------------------------------------------------------------------------
 const showFolders = async (config, options) => {
-
   // if the account is all then show the folders for all accounts
   if (u.isAccountAll()) {
     for (const account of config.accounts) {
-      info(chalk.blue(`${account.index}: ${account.account}\n`));
+      info(chalk.blue(`${account.index}: ${account.account}\n`))
       const folders = await getFolders(account, options)
 
       // const headers = ["path","pathAsListed","flags","delimiter","listed","parentPath","parent","name","subscribed","specialUse","specialUseSource"
@@ -141,12 +136,12 @@ const showFolders = async (config, options) => {
   }
 
   // otherwise show the counts for the account
-  const account = getAccount(config, options.account);
+  const account = getAccount(config, options.account)
   if (!account) {
     error(`account '${options.account}' not found\ncheck mm show -l for available accounts`)
     return
   }
-  info(chalk.blue(`\n${account.index}: ${account.account}\n`));
+  info(chalk.blue(`\n${account.index}: ${account.account}\n`))
 
   const folders = await getFolders(account, options)
   const headers = ["path", "parent", "name", "specialUse", "specialUseSource"]
@@ -201,9 +196,7 @@ export const showCommand = async (args, options, logger) => {
 
     info(account)
     info("\n")
-
   } catch (e) {
     error(e)
   }
 }
-

@@ -18,7 +18,6 @@ mm show [account] [options]
   -c, --counts   Show message counts
   -f, --folder   Display folder structure
   -l, --list     List accounts
-  -q, --quiet    Minimal output
 ```
 [Details](show.md)
 
@@ -48,15 +47,12 @@ mm delete [account] [options]
 ### clean - Maintenance
 ```bash
 mm clean [account] [options]
-  -q, --quiet    Silent operation
-  -v, --verbose  Show details
 ```
 [Maintenance guide](clean.md)
 
 ### open - Client Launch
 ```bash
 mm open [what] [options]
-  -v, --verbose  Debug info
 ```
 [Open command details](open.md)
 
@@ -134,31 +130,3 @@ MM_SCAN_LIMIT="5"
 - [Installation Guide](../README.md#installation)
 - [Configuration Guide](configuration.md)
 - [Filter Rules](filters.md)
-
-# MM Command Reference
-
-Core commands for managing email accounts and messages.
-
-## Message Commands
-
-- [scan](./scan.md) - Inspect and manage messages
-- [show](./show.md) - Display message details
-- [delete](./delete.md) - Move messages to trash
-- [clean](./clean.md) - Perform mailbox cleanup
-
-## Account Commands
-
-- [list](./list.md) - Show configured accounts
-- [open](./open.md) - Launch email clients
-
-## Options
-
-All commands support these common options:
-- `-v, --verbose` - Show detailed logging
-- `-q, --quiet` - Suppress non-error output
-
-## Environment Variables
-
-- `MM_DEFAULT_ACCOUNT` - Default account for commands
-- `MM_CONFIG_DIR` - Configuration directory location
-- `MM_DEBUG` - Enable debug logging when set

@@ -1,9 +1,9 @@
 import chalk from "chalk"
-import _ from "lodash"
 import { simpleParser } from "mailparser"
 import { load } from "./smash.js"
-import u from "./util.js"
-const { setInstance, getAccount, info, error, verbose, brief, dv } = u
+import { setInstance, info, error, verbose, brief, dv } from "./util.js"
+import { refreshFilters, roundToMinutes, getFolderPath } from "./util.js"
+import { getImapFlow, isAccountAll, getAccount } from "./util.js"
 
 /**
  * Main command handler for scanning email accounts and messages
@@ -24,12 +24,14 @@ export async function scanCommand(args, options, logger) {
     verbose(`account: ${options.account}`)
 
     // if the account is all
-    if (u.isAccountAll()) {
+    if (isAccountAll()) {
       for (const account of config.accounts) {
         const label = `${account.index}: ${account.account}`
         info("\n\n------------------------------------------------")
         options.brief ? brief(label) : info(label)
         info("------------------------------------------------")
+
+        await refreshFilters(account)
         const blacklist = account.blacklist ?? []
         await scanMailbox(logger, account, limit, blacklist, skip, options)
       }
@@ -44,7 +46,7 @@ export async function scanCommand(args, options, logger) {
       return
     }
 
-    await u.refreshFilters(account)
+    await refreshFilters(account)
     const blacklist = account.blacklist ?? []
     await scanMailbox(logger, account, limit, blacklist, skip, options)
   } catch (err) {
@@ -75,13 +77,13 @@ export async function scanCommand(args, options, logger) {
  */
 async function scanMailbox(logger, account, limit, blacklist, skip, options) {
   const qar = []
-  const client = await u.getImapFlow(account)
+  const client = await getImapFlow(account)
 
   try {
     // Connect to server
     await client.connect()
 
-    const folder = await u.getFolderPath(
+    const folder = await getFolderPath(
       client,
       options.folder && typeof options.folder === "string" ? options.folder : "INBOX"
     )
@@ -133,11 +135,11 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
           if (options.quiet) {
             qar.push(seq)
           } else {
-            if (isBlacklisted) brief(seqString)
+            info(seqString)
             info(`From: ${parsed.from?.text || "(unknown sender)"}`)
             info(`To: ${parsed.to?.text || "(unknown recipient)"}`)
             info(`Subject: ${parsed.subject || "(no subject)"}`)
-            info(`Date: ${u.roundToMinutes(parsed.date)}` || "(no date)")
+            info(`Date: ${roundToMinutes(parsed.date)}` || "(no date)")
             info("\n")
           }
 
@@ -151,17 +153,17 @@ async function scanMailbox(logger, account, limit, blacklist, skip, options) {
             await client.messageMove(seq, "Blacklisted")
           }
         }
-        logger.info(chalk.yellow(`Blacklisted ${blacklistedMessageCount} messages`))
+        brief(`Blacklisted ${blacklistedMessageCount} messages`)
       }
     } finally {
       // Always release the lock
       lock.release()
     }
     if (qar.length > 0) {
-      logger.info(`"${qar.join(",")}"`)
+      info(`"${qar.join(",")}"`)
     }
   } catch (err) {
-    logger.error(`Error scanning account ${account.account}:`, err.message)
+    error(`Error scanning account ${account.account}:`, err.message)
   } finally {
     await client.logout()
   }
