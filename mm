@@ -63,6 +63,19 @@ try {
     .action(commands.clean)
 
   // --------------------------------------------------------------
+  // filter command
+  // --------------------------------------------------------------
+  program
+    .command("filter", "manager email filters")
+    .argument("[account]", "specify account from config (defaults to all)")
+    .option("-b, --brief", "brief/minimal output")
+    .option("-c, --create", "create a filter folder")
+    .option("-d, --delete", "delete a filter folder")
+    .option("-q, --quiet", "quiet mode")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.filter)
+
+  // --------------------------------------------------------------
   // open command
   // --------------------------------------------------------------
   program

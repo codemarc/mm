@@ -4,6 +4,7 @@ import { smashCommand } from "./smash.js"
 import { scanCommand } from "./scan.js"
 import { deleteCommand } from "./delete.js"
 import { cleanCommand } from "./clean.js"
+import { filterCommand } from "./filter.js"
 
 export {
   openCommand as open,
@@ -11,5 +12,6 @@ export {
   smashCommand as smash,
   scanCommand as scan,
   deleteCommand as delete,
-  cleanCommand as clean
+  cleanCommand as clean,
+  filterCommand as filter
 }

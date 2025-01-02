@@ -41,6 +41,10 @@ const fetchMessages = async (client, messagesToFetch) => {
   return msglist
 }
 
+/**
+ * Scans the mailbox for the given account and options.
+ *
+ */
 async function scanMailbox(account, options) {
   const client = await getImapFlow(account)
   try {
