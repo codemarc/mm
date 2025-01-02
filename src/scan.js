@@ -1,9 +1,132 @@
 import chalk from "chalk"
+import _ from "lodash"
 import { simpleParser } from "mailparser"
 import { load } from "./smash.js"
-import { setInstance, info, error, verbose, brief, dv } from "./util.js"
-import { refreshFilters, roundToMinutes, getFolderPath } from "./util.js"
-import { getImapFlow, isAccountAll, getAccount } from "./util.js"
+import { brief, dv, error, info, setInstance, verbose } from "./util.js"
+import { getFolderPath, refreshFilters, roundToMinutes } from "./util.js"
+import { getAccount, getImapFlow, isAccountAll } from "./util.js"
+
+/**
+ * Fetches and parses specified messages from the given IMAP client.
+ *
+ * @async
+ * @function fetchMessages
+ * @param {Object} client - IMAP client instance for fetching email messages.
+ * @param {number[]} messagesToFetch - List of message sequence identifiers.
+ * @returns {Promise<Object[]>} A promise resolving to an array of message objects, each containing:
+ *  @property {number} seq - The sequence number of the message.
+ *  @property {string} senderEmail - Lowercased sender email address.
+ *  @property {string} recipientEmail - Lowercased recipient email address.
+ *  @property {string} from - Text representation of the sender.
+ *  @property {string} to - Text representation of the recipient.
+ *  @property {string} subject - Subject of the message.
+ *  @property {string} date - Date of the message, rounded to minutes.
+ */
+const fetchMessages = async (client, messagesToFetch) => {
+  const msglist = []
+  for (const seq of messagesToFetch) {
+    const message = await client.fetchOne(seq, { source: true })
+    const parsed = await simpleParser(message.source)
+    const msg = {
+      seq: seq,
+      senderEmail: parsed.from?.value?.[0]?.address?.toLowerCase(),
+      recipientEmail: parsed.to?.value?.[0]?.address?.toLowerCase(),
+      from: parsed.from?.text || "(unknown sender)",
+      to: parsed.to?.text || "(unknown recipient)",
+      subject: parsed.subject || "(no subject)",
+      date: roundToMinutes(parsed.date) || "(no date)"
+    }
+    msglist.push(msg)
+  }
+  return msglist
+}
+
+async function scanMailbox2(account, options) {
+  const client = await getImapFlow(account)
+  try {
+    await client.connect()
+    const opt = options.folder && typeof options.folder === "string" ? options.folder : "INBOX"
+    const src = await getFolderPath(client, opt)
+
+    const lock = await client.getMailboxLock(src)
+    try {
+      const allMessages = await client.search({ all: true })
+      const unreadMessages = await client.search({ unseen: true })
+      const limit = Number.parseInt(options.limit || dv.scanLimit)
+      const skip = Number.parseInt(options.skip || "0")
+      const messages = options.unread ? unreadMessages : allMessages
+      const messagesToFetch = messages.slice(-limit - skip, -skip || undefined).reverse()
+      const msglist = await fetchMessages(client, messagesToFetch)
+      const filterCounts = new Map()
+      let ndx = 0
+
+      if (account.filters !== undefined && account.filters.length > 0) {
+        for (const filter of account.filters) {
+          if (!filter.includes(":")) continue
+          const filterName = filter.split(":")[0]
+          const filterTexts = account[filterName].map((text) => text.toLowerCase())
+
+          const matches = msglist.filter((msg) => {
+            return filterTexts.some((text) => {
+              if (text.length === 0) return false
+              const isDomain = !text.includes("@")
+              return (
+                msg.senderEmail === text ||
+                msg.recipientEmail === text ||
+                (isDomain && (msg.senderEmail.endsWith(text) || msg.recipientEmail.endsWith(text)))
+              )
+            })
+          })
+
+          if (matches.length > 0) {
+            // Move matching messages to filter folder
+            for (const msg of matches) {
+              if (msg.filter === undefined) {
+                msg.filter = filterName
+                await client.messageMove(msg.seq, filterName)
+              }
+            }
+            filterCounts.set(filterName, matches.length)
+          }
+        }
+      }
+
+      for (const msg of msglist) {
+        if (options.read) {
+          await client.messageFlagsAdd(msg.seq, ["\\Seen"])
+        }
+
+        const seqString =
+          chalk.blue(`Index: ${++ndx}, Seqno: ${msg.seq}`) +
+          (msg.filter ? chalk.red(` ${msg.filter}`) : "")
+
+        info(seqString)
+        info(`From: ${msg.from}`)
+        info(`To: ${msg.to}`)
+        info(`Subject: ${msg.subject}`)
+        info(`Date: ${msg.date}`)
+        info("\n")
+      }
+
+      info(
+        chalk.blue(
+          `Account: ${account.account} total(${allMessages.length.toLocaleString()}) unread(${unreadMessages.length.toLocaleString()}) limit(${messagesToFetch.length.toLocaleString()}) skipped(${skip.toLocaleString()})`
+        )
+      )
+      filterCounts.forEach((count, folder) => {
+        info(chalk.green(`Moved ${count} messages to ${folder}`))
+      })
+
+      info("\n")
+    } finally {
+      lock.release()
+    }
+  } catch (err) {
+    error(`Error scanning account ${account.account}:`, err.message)
+  } finally {
+    await client.logout()
+  }
+}
 
 /**
  * Main command handler for scanning email accounts and messages
@@ -15,7 +138,10 @@ export async function scanCommand(args, options, logger) {
   try {
     verbose("loading config")
     const config = load()
+
     const limit = Number.parseInt(args.limit || options.limit || dv.scanLimit)
+    options.limit = limit.toString()
+
     const skip = Number.parseInt(options.skip || "0")
 
     // if no account is specified then use the default account
@@ -32,8 +158,12 @@ export async function scanCommand(args, options, logger) {
         info("------------------------------------------------")
 
         await refreshFilters(account)
-        const blacklist = account.blacklist ?? []
-        await scanMailbox(logger, account, limit, blacklist, skip, options)
+        if (account.filters.length > 1) {
+          await scanMailbox2(account, options)
+        } else {
+          const blacklist = account.blacklist ?? []
+          await scanMailbox(logger, account, limit, blacklist, skip, options)
+        }
       }
       return
     }
@@ -47,8 +177,14 @@ export async function scanCommand(args, options, logger) {
     }
 
     await refreshFilters(account)
-    const blacklist = account.blacklist ?? []
-    await scanMailbox(logger, account, limit, blacklist, skip, options)
+    //if (account.filters.length > 1) {
+    if (1) {
+      await scanMailbox2(account, options)
+    } else {
+      const blacklist = account.blacklist ?? []
+      await scanMailbox(logger, account, limit, blacklist, skip, options)
+      return
+    }
   } catch (err) {
     error(err)
   }
@@ -58,20 +194,6 @@ export async function scanCommand(args, options, logger) {
  * Scans a single mailbox for messages matching specified criteria
  * Handles message fetching, parsing, blacklist checking, and message actions
  *
- * @param {Object} logger - Logger instance for output
- * @param {Object} account - Account configuration object
- * @param {string} account.account - Account identifier
- * @param {Array<string>} account.blacklist - Blacklisted email addresses/domains
- * @param {number} limit - Maximum number of messages to process
- * @param {Array<string>} blacklist - Array of blacklisted addresses/domains
- * @param {number} skip - Number of messages to skip
- * @param {Object} options - Scanning options
- * @param {boolean} [options.quiet] - Suppress detailed output
- * @param {boolean} [options.read] - Mark messages as read
- * @param {boolean} [options.unread] - Only show unread messages
- * @param {boolean} [options.zero] - Zero out unread count
- * @param {string} [options.folder] - Target folder to scan
- * @param {boolean} [options.archive] - Use archive folder
  * @returns {Promise<void>} A promise that resolves when mailbox scanning is complete
  * @throws {Error} If mailbox scanning encounters an error
  */
