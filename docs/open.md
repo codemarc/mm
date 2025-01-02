@@ -1,6 +1,6 @@
 # Open Command
 
-Launches configured email clients or web interfaces.
+Open mail client or web interface.
 
 ## Usage
 

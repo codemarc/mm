@@ -1,6 +1,6 @@
 {
   "name": "@codemarc/mm",
-  "version": "0.0.7",
+  "version": "0.0.87",
   "description": "mail minder - code to manage your inbox",
   "main": "mm",
   "type": "module",

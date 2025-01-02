@@ -44,7 +44,7 @@ try {
   // --------------------------------------------------------------
   program
     .command("delete", "delete email")
-    .argument("[account]", "specify account from config (defaults to all)")
+    .argument("<account>", "specify account from config")
     .option("-f, --folder", "move content of the named folder to trash")
     .option("-i, --index", "index(s) of email to delete, comma separated, `:` for a range")
     .option("-s, --seqno", "seqno(s) of email to delete, comma separated, `:` for a range")

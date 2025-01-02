@@ -1,6 +1,16 @@
 # Mailminder Changelog
 
 ## [0.0.7] - 2025
+### Added
+- Filter management command with create/delete operations
+- Enhanced documentation for all commands
+- Cross-reference links in command docs
+
+### Changed
+- Improved command argument handling
+- Better default value management
+- Standardized quiet/verbose modes
+
 
 ## [0.0.6] - 2024
 ### Added
@@ -54,24 +64,31 @@
 - Enhanced error handling for message reading
 - Better date formatting for message display
 
-## [0.0.2] - 2024
+## [0.0.2] - 2024-01-15
 ### Added
-- Improved blacklisted folder handling with multiple path attempts
-- Added fallback paths for different email providers
-- Enhanced error handling for folder creation and message moving
+- `open` command for launching email clients
+- `filter` command for managing email filters
+- Support for multiple email accounts
+- Enhanced folder operations
+- Comprehensive documentation
 
 ### Changed
-- Better handling of blacklist folder creation
-- Improved error messages for folder operations
+- Improved error handling
+- Better cross-platform support
+- Enhanced configuration management
+- Standardized command options
 
-## [0.0.1] - 2024
+### Fixed
+- Account validation issues
+- Configuration file handling
+- Command option parsing
+
+## [0.0.1] - 2024-01-01
 ### Added
 - Initial release
-- Basic IMAP email account management
-- Email scanning functionality
-- Blacklist support
-- Password encryption/decryption with `smash` command
+- Basic IMAP operations
+- Core commands: show, scan, delete, clean
+- Encryption support with smash command
 - Configuration file support
+- TLS/SSL support
 - Multiple account management
-- TLS support
-- Basic metrics display

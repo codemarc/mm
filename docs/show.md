@@ -1,53 +1,49 @@
 # Show Command
 
-Display detailed information about messages and accounts.
+Display configuration and status information.
 
 ## Usage
 
 ```bash
-mm show [target] [options]
+mm show [account] [options]
 ```
 
 ## Description
 
-The show command can display:
-- Message contents by index or sequence number
-- Account settings and status
-- Folder statistics and quotas
+The show command displays:
+- Account configuration details
+- Message counts
+- Folder structure and status
+- Account list
 
 ## Options
 
-- `-i, --index`: Show message by index position
-- `-s, --seqno`: Show message by sequence number
-- `-f, --folder`: Select source folder (default: INBOX)
-- `-v, --verbose`: Show raw message headers
-- `-q, --quiet`: Show only message body
+- `-c, --counts`: Show message counts
+- `-f, --folder`: Show folder or counts
+- `-l, --list`: Show all accounts
+- `-q, --quiet`: Quiet mode
+- `-v, --verbose`: Verbose mode
 
 ## Examples
 
 ```bash
-# Show newest message
-mm show --index 1
+# Show all accounts
+mm show
 
-# Show specific message
-mm show --seqno 2201
-
-# Show account details
+# Show specific account
 mm show work
 
-# Show folder stats
-mm show --folder Archive
+# Show message counts
+mm show --counts
+
+# Show folder structure
+mm show --folder
+
+# List all accounts
+mm show --list
 ```
-
-## Output Format
-
-Message display includes:
-- Headers (From, To, Subject, Date)
-- Content type and encoding
-- Message body (text or HTML)
-- Attachments list
 
 ## See Also
 
-- [scan](./scan.md) - List messages
-- [commands](./commands.md)
+- [commands](./commands.md) - Command reference
+

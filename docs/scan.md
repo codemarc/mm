@@ -1,70 +1,61 @@
-# Scan Command Documentation
+# Scan Command
 
-The scan command allows you to inspect and manage email messages across your configured accounts.
+Scan email folders.
 
 ## Usage
 
 ```bash
-mm scan [account] [options]
+mm scan [account] [limit] [options]
 ```
 
 ## Arguments
 
-- `account`: (Optional) Specify which account to scan. Defaults to all accounts if not specified.
+- `account`: Specify account from config (defaults to MM_DEFAULT_ACCOUNT)
+- `limit`: Limit number of emails to scan (default: MM_SCAN_LIMIT)
 
 ## Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-f, --folder` | Specify folder to scan | INBOX |
-| `-g, --archive` | Use archive folder instead | All Mail/Archive |
-| `-l, --limit` | Maximum number of emails to scan | 5 |
-| `-q, --quiet` | Output only message sequence numbers | false |
-| `-r, --read` | Mark scanned emails as read | false |
-| `-s, --skip` | Number of emails to skip | 0 |
-| `-u, --unread` | Only show unread emails | false |
-| `-v, --verbose` | Show detailed logging | false |
-| `-z, --zero` | Mark all messages as read | false |
+- `-b, --brief`: Brief/minimal output
+- `-f, --folder`: Specify folder to scan (default: INBOX)
+- `-l, --limit`: Limit number of emails to scan
+- `-q, --quiet`: Quiet mode
+- `-r, --read`: Mark emails as read
+- `-s, --skip`: Skip number of emails to scan (default: 0)
+- `-u, --unread`: Only show unread emails
+- `-v, --verbose`: Verbose mode
 
 ## Examples
 
 ```bash
-# Scan all accounts
+# Scan default account
 mm scan
 
+# Scan with limit
+mm scan 10
+
 # Scan specific account
-mm scan work
+mm scan work 5
 
-# Show only unread messages
-mm scan -u
+# Show unread messages only
+mm scan --unread
 
-# Scan archive folder
-mm scan -g
+# Mark messages as read
+mm scan --read
 
-# Show last 10 messages
-mm scan -l 10
-
-# Mark messages as read while scanning
-mm scan -r
-
-# Zero out unread count
-mm scan -z
+# Brief output format
+mm scan --brief
 ```
-
-## Blacklist Handling
-
-When scanning, the command checks messages against account blacklists:
-- Full email addresses are matched exactly
-- Domain-only entries match any email from that domain
-- Blacklisted messages are automatically moved to the "Blacklisted" folder
 
 ## Output Format
 
 In normal mode, each message shows:
-- Sequence number
 - From address
-- To address
 - Subject
 - Date
 
-In quiet mode (-q), only sequence numbers are output.
+In brief mode (-b), output is condensed to one line per message.
+In quiet mode (-q), only essential information is displayed.
+
+## See Also
+
+- [commands](./commands.md) - Command reference

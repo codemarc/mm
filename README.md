@@ -73,34 +73,6 @@ Encrypted all passwords
 
 See [Command Reference](docs/commands.md) for detailed documentation of all available commands.
 
-```bash
-$ mm
-
-   mm - mail minder - code to manage your inbox
-
-   USAGE
-
-     mm <command> [options]
-
-   COMMANDS
-
-     show [account]              show configuration                 
-     scan [account] [limit]      scan email folders                 
-     delete [account]            delete email                       
-     clean [account]             clean up mailboxes                 
-     open [what]                 open mail                          
-     smash                       encrypt/decrypt secrets            
-     help <command>              Display help for a specific command
-
-   GLOBAL OPTIONS
-
-     -h, --help         Display help                                      
-     -V, --version      Display version                                   
-     --no-color         Disable colors                                    
-     --quiet            Quiet mode - only displays warn and error messages
-     -v, --verbose      Verbose mode - will also output debug messages    
-```
-
 ## File Structure
 
 ```
@@ -119,5 +91,5 @@ mm/
 ## Links
 
 - [Documentation](docs/commands.md)
-- [Issue Tracker](https://github.com/yourusername/mm/issues)
+- [Issue Tracker](https://github.com/codemarc/mm/issues)
 - [Author Website](https://codemarc.net)

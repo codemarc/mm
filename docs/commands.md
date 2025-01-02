@@ -1,132 +1,105 @@
 # Command Reference
 
-A comprehensive guide to Mail Manager (mm) commands and their usage.
+A comprehensive guide to Mail Manager (mm) commands.
 
 ## Global Options
 
-These options are available across all commands:
+Available for all commands:
+- `-v, --verbose`: Verbose mode
+- `-q, --quiet`: Quiet mode
+- `-h, --help`: Show help
 
-- `-v, --verbose`: Enable detailed logging output
-- `-q, --quiet`: Suppress non-essential output
-- `-h, --help`: Display command help
+## Commands
 
-## Core Commands
-
-### show - Information Display
+### show - Show Configuration
 ```bash
 mm show [account] [options]
+  # Account defaults to all
   -c, --counts   Show message counts
-  -f, --folder   Display folder structure
-  -l, --list     List accounts
+  -f, --folder   Show folder or counts
+  -l, --list     Show all accounts
+  -q, --quiet    Quiet mode
+  -v, --verbose  Verbose mode
 ```
-[Details](show.md)
+[Detailed show documentation](./show.md)
 
-### scan - Message Analysis
+### scan - Scan Email Folders
 ```bash
 mm scan [account] [limit] [options]
-  -a, --archive  Set archive folder
-  -b, --brief    Minimal output
-  -f, --folder   Target folder
-  -l, --limit    Message limit
-  -r, --read     Mark as read
-  -s, --skip     Skip messages
-  -u, --unread   Only unread
-  -z, --zero     Reset counts
+  # Account defaults to MM_DEFAULT_ACCOUNT
+  # Limit defaults to MM_SCAN_LIMIT
+  -b, --brief    Brief/minimal output
+  -f, --folder   Specify folder to scan (default: INBOX)
+  -l, --limit    Limit number of emails to scan
+  -q, --quiet    Quiet mode
+  -r, --read     Mark emails as read
+  -s, --skip     Skip number of emails (default: 0)
+  -u, --unread   Only show unread emails
+  -v, --verbose  Verbose mode
 ```
-[Learn more about scan](scan.md)
+[Detailed scan documentation](./scan.md)
 
-### delete - Message Removal
+### delete - Delete Email
 ```bash
-mm delete [account] [options]
-  -f, --folder   Source folder
-  -i, --index    Position-based selection
-  -s, --seqno    Sequence-based selection
+mm delete <account> [options]
+  # Account is required
+  -f, --folder   Move content of named folder to trash
+  -i, --index    Index(s) to delete, comma separated, ':' for range
+  -s, --seqno    Seqno(s) to delete, comma separated, ':' for range
+  -q, --quiet    Quiet mode
+  -v, --verbose  Verbose mode
 ```
-[Delete command guide](delete.md)
+[Detailed delete documentation](./delete.md)
 
-### clean - Maintenance
+### clean - Clean Up Mailboxes
 ```bash
 mm clean [account] [options]
+  # Account defaults to all
+  -q, --quiet    Quiet mode
+  -v, --verbose  Verbose mode
 ```
-[Maintenance guide](clean.md)
+[Detailed clean documentation](./clean.md)
 
-### open - Client Launch
+### filter - Manage Email Filters
+```bash
+mm filter [account] [options]
+  # Account defaults to all
+  -b, --brief    Brief/minimal output
+  -c, --create   Create a filter folder
+  -d, --delete   Delete a filter folder
+  -q, --quiet    Quiet mode
+  -v, --verbose  Verbose mode
+```
+[Detailed filter documentation](./filter.md)
+
+### open - Open Mail
 ```bash
 mm open [what] [options]
+  # What defaults to outlook
+  -v, --verbose  Verbose mode
 ```
-[Open command details](open.md)
+[Detailed open documentation](./open.md)
 
-### smash - Security
+### smash - Encrypt/Decrypt Secrets
 ```bash
 mm smash [options]
   -e, --encrypt  Encrypt secrets
   -d, --decrypt  Decrypt secrets
 ```
-[Security guide](smash.md)
+[Detailed smash documentation](./smash.md)
 
-## Command Combinations
+## Documentation
 
-Common command combinations and workflows:
-
-### Maintenance Flow
-```bash
-# Check accounts
-mm show -l
-
-# View message counts
-mm show -c
-
-# Clean mailboxes
-mm clean all
-```
-
-### Message Management
-```bash
-# View messages
-mm scan -l 10
-
-# Delete specific messages
-mm delete -i 1,2,3
-
-# Mark remaining as read
-mm scan -r
-```
-
-### Account Setup
-```bash
-# Encrypt credentials
-mm smash -e
-
-# Verify configuration
-mm show all
-
-# Test connection
-mm scan -l 1
-```
-
-## Environment Variables
-
-Global settings that affect all commands:
-
-```bash
-# Required
-MM_CRYPTOKEY="encryption-key"
-
-# Optional
-MM_DEFAULT_ACCOUNT="work"
-MM_FILTERS_PATH="./filters"
-MM_SCAN_LIMIT="5"
-```
-
-## Exit Codes
-
-- 0: Success
-- 1: General error
-- 2: Configuration error
-- 3: Network error
+- [Show Command](./show.md) - Show configuration and status
+- [Scan Command](./scan.md) - Scan email folders
+- [Delete Command](./delete.md) - Delete email
+- [Clean Command](./clean.md) - Clean up mailboxes
+- [Filter Command](./filter.md) - Manage email filters
+- [Open Command](./open.md) - Open mail client
+- [Smash Command](./smash.md) - Encrypt/decrypt secrets
 
 ## See Also
 
-- [Installation Guide](../README.md#installation)
-- [Configuration Guide](configuration.md)
-- [Filter Rules](filters.md)
+- [Installation](../README.md#installation)
+- [Configuration](../README.md#configuration)
+
