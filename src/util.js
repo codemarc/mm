@@ -103,17 +103,19 @@ export function getAccountNames(config) {
 export async function refreshFilters(account) {
   if (account.filters) {
     for (const filter of account.filters) {
-      const arf = filter.split(":")
       const filename = path.join(
         process.cwd(),
         process.env.MM_FILTERS_PATH ?? "filters",
-        arf.reverse().join(".")
+        `${account.account}.${filter}`
       )
       if (!fs.existsSync(filename)) {
         continue
       }
       const list = (await fs.promises.readFile(filename, "utf8")).split("\n")
-      account[arf[1]] = list.concat(account[arf[1]] ?? [])
+      if (!account.lists) {
+        account.lists = {}
+      }
+      account.lists[filter] = list.concat(account?.lists[filter] ?? [])
     }
   }
   return account

@@ -47,8 +47,7 @@ export async function filterCommand(args, options, logger) {
       await client.connect()
       const folders = await client.list()
 
-      for (const filter of account.filters ?? []) {
-        const filterName = filter.split(":")[0]
+      for (const filterName of account.filters ?? []) {
         const folderExists = folders.some((folder) => folder.name === filterName)
         let msgcount = 0
 
@@ -78,7 +77,7 @@ export async function filterCommand(args, options, logger) {
 
         tableData.push({
           filter: filterName,
-          entries: account[filterName].length,
+          entries: account.filters.length,
           exists: folderExists ? chalk.green("yes") : chalk.red("no"),
           count: msgcount
         })

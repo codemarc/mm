@@ -52,6 +52,7 @@ const getMetrics = async (account, options) => {
       rc = {
         index: account.index,
         account: account.account,
+        status: account.active === false ? "inactive" : "active",
         username: account.user,
         unread: unread.length.toLocaleString(),
         total: total.length.toLocaleString()
@@ -60,8 +61,8 @@ const getMetrics = async (account, options) => {
       logger.error(error)
     } finally {
       lock.release()
-      return rc
     }
+    return rc
   } catch (err) {
     error(err?.responseText ?? err)
   } finally {

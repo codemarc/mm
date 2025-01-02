@@ -65,32 +65,36 @@ async function scanMailbox(account, options) {
       let ndx = 0
 
       if (account.filters !== undefined && account.filters.length > 0) {
-        for (const filter of account.filters) {
-          if (!filter.includes(":")) continue
-          const filterName = filter.split(":")[0]
-          const filterTexts = account[filterName].map((text) => text.toLowerCase())
+        for (const filterName of account.filters) {
+          try {
+            const filterList = account.lists[filterName]
+            const filterTexts = filterList.map((text) => text.toLowerCase())
 
-          const matches = msglist.filter((msg) => {
-            return filterTexts.some((text) => {
-              if (text.length === 0) return false
-              const isDomain = !text.includes("@")
-              return (
-                msg.senderEmail === text ||
-                msg.recipientEmail === text ||
-                (isDomain && (msg.senderEmail.endsWith(text) || msg.recipientEmail.endsWith(text)))
-              )
+            const matches = msglist.filter((msg) => {
+              return filterTexts.some((text) => {
+                if (text.length === 0) return false
+                const isDomain = !text.includes("@")
+                return (
+                  msg.senderEmail === text ||
+                  msg.recipientEmail === text ||
+                  (isDomain &&
+                    (msg.senderEmail.endsWith(text) || msg.recipientEmail.endsWith(text)))
+                )
+              })
             })
-          })
 
-          if (matches.length > 0) {
-            // Move matching messages to filter folder
-            for (const msg of matches) {
-              if (msg.filter === undefined) {
-                msg.filter = filterName
-                await client.messageMove(msg.seq, filterName)
+            if (matches.length > 0) {
+              // Move matching messages to filter folder
+              for (const msg of matches) {
+                if (msg.filter === undefined) {
+                  msg.filter = filterName
+                  await client.messageMove(msg.seq, filterName)
+                }
               }
+              filterCounts.set(filterName, matches.length)
             }
-            filterCounts.set(filterName, matches.length)
+          } catch (err) {
+            error(err)
           }
         }
       }
@@ -151,6 +155,10 @@ export async function scanCommand(args, options, logger) {
     // if the account is all
     if (isAccountAll()) {
       for (const account of config.accounts) {
+        const isActive = account.active !== false
+        if (!isActive) {
+          continue
+        }
         const label = `${account.index}: ${account.account}`
         info("------------------------------------------------")
         info(label)

@@ -9,8 +9,10 @@ accounts:
     port: 993
     tls: true
     filters:
-      - blacklist:codemarc
-      - unsubscribe:codemarc
+      - whitelist
+      - blacklist
+      - joboards
+      - unsubscribe
     index: 1
   - account: marc
     type: imap
@@ -21,8 +23,11 @@ accounts:
     port: 993
     tls: true
     filters:
-      - blacklist:marc
-      - unsubscribe:marc
+      - whitelist
+      - joboards
+      - vendors
+      - blacklist
+      - unsubscribe
     index: 2
   - account: marc17
     type: imap
@@ -33,9 +38,10 @@ accounts:
     port: 993
     tls: true
     filters:
-      - blacklist:marc17
+      - blacklist
     index: 3
   - account: smashedata
+    active: false
     type: imap
     user: smashedata@gmail.com
     password: >-
@@ -45,6 +51,7 @@ accounts:
     tls: true
     index: 4
   - account: birdie
+    active: false
     type: imap
     user: abirdietoldme@gmail.com
     password: >-
@@ -53,5 +60,5 @@ accounts:
     port: 993
     tls: true
     filters:
-      - blacklist:birdie
+      - blacklist
     index: 5
