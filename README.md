@@ -1,6 +1,6 @@
 # Mail Minder (mm)
 
-_code to manage your inbox_  
+__Code to Manage Your Inbox__  
 A command-line email management tool focusing on 
 automation and maintenance.
 
@@ -53,7 +53,7 @@ accounts:
   - account: birdie
     type: imap
     user: abirdietoldme@gmail.com
-    password: tweettweet
+    password: IMapOrAppPasswword
     host: imap.gmail.com
     port: 993
     tls: true
@@ -63,6 +63,11 @@ accounts:
 ```
 
 Before you use the config you encrypt its secrets
+
+```bash
+$ mm smash -e
+Encrypted all passwords
+```
 
 ## Commands
 
@@ -96,51 +101,6 @@ $ mm
      -v, --verbose      Verbose mode - will also output debug messages    
 ```
 
-
-
-### show - Display Account Information
-```bash
-mm show [account] [-c] [-f] [-l] [-q] [-v]
-  -c, --counts   Show message statistics
-  -f, --folder   Display folder structure
-  -l, --list     List configured accounts
-  -q, --quiet    Suppress non-essential output
-  -v, --verbose  Detailed logging
-```
-
-### delete - Remove Messages
-```bash
-mm delete [account] [-f folder] [-i index] [-s seqno] [-q] [-v]
-  -f, --folder   Select source folder
-  -i, --index    Select by position (e.g. 1,2,3 or 1-3)
-  -s, --seqno    Select by sequence number
-  -q, --quiet    Suppress output
-  -v, --verbose  Debug logging
-```
-
-### clean - Mailbox Maintenance
-```bash
-mm clean [account] [-q] [-v]
-  -q, --quiet    Cron-job friendly output
-  -v, --verbose  Show operations
-```
-
-### scan - Message Analysis
-```bash
-mm scan [account] [options]
-  -f, --folder   Target folder
-  -l, --limit    Message limit
-  -u, --unread   Only unread
-  -v, --verbose  Debug mode
-```
-
-## Environment Variables
-
-- `MM_CRYPTOKEY`: Encryption key for passwords
-- `MM_DEFAULT_ACCOUNT`: Default email account
-- `MM_FILTERS_PATH`: Custom filter rules location
-- `MM_SCAN_LIMIT`: Default scan batch size
-
 ## File Structure
 
 ```
@@ -161,4 +121,3 @@ mm/
 - [Documentation](docs/commands.md)
 - [Issue Tracker](https://github.com/yourusername/mm/issues)
 - [Author Website](https://codemarc.net)
-

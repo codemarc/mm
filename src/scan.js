@@ -41,7 +41,7 @@ const fetchMessages = async (client, messagesToFetch) => {
   return msglist
 }
 
-async function scanMailbox2(account, options) {
+async function scanMailbox(account, options) {
   const client = await getImapFlow(account)
   try {
     await client.connect()
@@ -108,17 +108,14 @@ async function scanMailbox2(account, options) {
         info("\n")
       }
 
-      info(
-        chalk.blue(
-          `Account: ${account.account} total(${allMessages.length.toLocaleString()}) unread(${unreadMessages.length.toLocaleString()}) limit(${messagesToFetch.length.toLocaleString()}) skipped(${skip.toLocaleString()})`
-        )
-      )
+      const label = `Account: ${account.account} total(${allMessages.length.toLocaleString()}) unread(${unreadMessages.length.toLocaleString()}) limit(${messagesToFetch.length.toLocaleString()}) skipped(${skip.toLocaleString()})`
+      options.brief ? brief(label) : info(chalk.green(label))
+
       filterCounts.forEach((count, folder) => {
         info(chalk.green(`Moved ${count} messages to ${folder}`))
       })
-
-      info("\n")
     } finally {
+      options.brief ? brief("\n") : info("\n")
       lock.release()
     }
   } catch (err) {
@@ -142,8 +139,6 @@ export async function scanCommand(args, options, logger) {
     const limit = Number.parseInt(args.limit || options.limit || dv.scanLimit)
     options.limit = limit.toString()
 
-    const skip = Number.parseInt(options.skip || "0")
-
     // if no account is specified then use the default account
     options.account = args?.account ? args.account : dv.accountAlias
 
@@ -153,17 +148,11 @@ export async function scanCommand(args, options, logger) {
     if (isAccountAll()) {
       for (const account of config.accounts) {
         const label = `${account.index}: ${account.account}`
-        info("\n\n------------------------------------------------")
-        options.brief ? brief(label) : info(label)
         info("------------------------------------------------")
-
+        info(label)
+        info("------------------------------------------------")
         await refreshFilters(account)
-        if (account.filters.length > 1) {
-          await scanMailbox2(account, options)
-        } else {
-          const blacklist = account.blacklist ?? []
-          await scanMailbox(logger, account, limit, blacklist, skip, options)
-        }
+        await scanMailbox(account, options)
       }
       return
     }
@@ -177,116 +166,8 @@ export async function scanCommand(args, options, logger) {
     }
 
     await refreshFilters(account)
-    //if (account.filters.length > 1) {
-    if (1) {
-      await scanMailbox2(account, options)
-    } else {
-      const blacklist = account.blacklist ?? []
-      await scanMailbox(logger, account, limit, blacklist, skip, options)
-      return
-    }
+    await scanMailbox(account, options)
   } catch (err) {
     error(err)
-  }
-}
-
-/**
- * Scans a single mailbox for messages matching specified criteria
- * Handles message fetching, parsing, blacklist checking, and message actions
- *
- * @returns {Promise<void>} A promise that resolves when mailbox scanning is complete
- * @throws {Error} If mailbox scanning encounters an error
- */
-async function scanMailbox(logger, account, limit, blacklist, skip, options) {
-  const qar = []
-  const client = await getImapFlow(account)
-
-  try {
-    // Connect to server
-    await client.connect()
-
-    const folder = await getFolderPath(
-      client,
-      options.folder && typeof options.folder === "string" ? options.folder : "INBOX"
-    )
-
-    let blacklistedMessageCount = 0
-
-    const lock = await client.getMailboxLock(folder)
-    try {
-      if (options.zero) {
-        const unread = await client.search({ unseen: true })
-        if (unread.length > 0) {
-          await client.messageFlagsAdd(unread, ["\\Seen"])
-          info(chalk.green(`Marked ${unread.length} messages as read`))
-        } else {
-          info("No unread messages found")
-        }
-      } else {
-        // Modify search to include unread filter if specified
-        const searchCriteria = options.unread ? { unseen: true } : { all: true }
-        const messages = await client.search(searchCriteria)
-        const messagesToFetch = messages.slice(-limit - skip, -skip || undefined).reverse()
-
-        info(
-          `Found ${messages.length} ${options.unread ? "unread " : ""} messages, showing ${messagesToFetch.length} (skipping ${skip})\n`
-        )
-
-        // Fetch messages
-        let ndx = 0
-        for (const seq of messagesToFetch) {
-          const message = await client.fetchOne(seq, { source: true })
-          const parsed = await simpleParser(message.source)
-
-          const senderEmail = parsed.from?.value?.[0]?.address?.toLowerCase()
-          const recipientEmail = parsed.to?.value?.[0]?.address?.toLowerCase()
-          const isBlacklisted = blacklist.some((blocked) => {
-            if (blocked.length === 0) return false
-            const blc = blocked.toLowerCase()
-            return (
-              blc === senderEmail ||
-              blc === recipientEmail ||
-              (blc.indexOf("@") === -1 && senderEmail.endsWith(blc))
-            )
-          })
-
-          const seqString =
-            chalk.blue(`Index: ${++ndx}, Seqno: ${seq}`) +
-            (isBlacklisted ? chalk.red(" BLACKLISTED") : "")
-
-          if (options.quiet) {
-            qar.push(seq)
-          } else {
-            info(seqString)
-            info(`From: ${parsed.from?.text || "(unknown sender)"}`)
-            info(`To: ${parsed.to?.text || "(unknown recipient)"}`)
-            info(`Subject: ${parsed.subject || "(no subject)"}`)
-            info(`Date: ${roundToMinutes(parsed.date)}` || "(no date)")
-            info("\n")
-          }
-
-          // Mark message as read
-          if (options.read) {
-            await client.messageFlagsAdd(seq, ["\\Seen"])
-          }
-
-          if (isBlacklisted) {
-            blacklistedMessageCount++
-            await client.messageMove(seq, "Blacklisted")
-          }
-        }
-        brief(`Blacklisted ${blacklistedMessageCount} messages`)
-      }
-    } finally {
-      // Always release the lock
-      lock.release()
-    }
-    if (qar.length > 0) {
-      info(`"${qar.join(",")}"`)
-    }
-  } catch (err) {
-    error(`Error scanning account ${account.account}:`, err.message)
-  } finally {
-    await client.logout()
   }
 }

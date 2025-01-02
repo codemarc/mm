@@ -16,7 +16,7 @@ try {
     .command("show", "show configuration")
     .argument("[account]", "specify account from config (defaults to all)")
     .option("-c, --counts", "show message counts")
-    .option("-f, --folder", "show folder or  counts")
+    .option("-f, --folder", "show folder or counts")
     .option("-l, --list", "show all accounts")
     .option("-q, --quiet", "quiet mode")
     .option("-v, --verbose", "verbose mode")
@@ -29,7 +29,6 @@ try {
     .command("scan", "scan email folders")
     .argument("[account]", `specify account from config (defaults: ${dv.accountAlias})`)
     .argument("[limit]", `limit number of emails to scan (default: ${dv.scanLimit})`)
-    .option("-a, --archive", "specify archive folder, (default: All Mail or Archive)")
     .option("-b, --brief", "brief/minimal output")
     .option("-f, --folder", "specify folder to scan (default: INBOX)")
     .option("-l, --limit", `limit number of emails to scan (default: ${dv.scanLimit})`)
@@ -38,7 +37,6 @@ try {
     .option("-s, --skip", "skip number of emails to scan (default: 0)")
     .option("-u, --unread", "only show unread emails")
     .option("-v, --verbose", "verbose mode")
-    .option("-z, --zero", "zero out unread count")
     .action(commands.scan)
 
   // --------------------------------------------------------------
