@@ -45,7 +45,7 @@ const fetchMessages = async (client, messagesToFetch) => {
  * Scans the mailbox for the given account and options.
  *
  */
-async function scanMailbox(account, options) {
+async function scanMailbox(account, options, logger) {
   const client = await getImapFlow(account)
   try {
     await client.connect()
@@ -54,6 +54,26 @@ async function scanMailbox(account, options) {
 
     const lock = await client.getMailboxLock(src)
     try {
+      // Extract flagged messages
+      if (options.extract) {
+        const flaggedMessages = await client.search({ flagged: true })
+        const msglist = await fetchMessages(client, flaggedMessages.reverse())
+        for (const msg of msglist) {
+          // must use logger directly to handle the quiet option
+          if (options.quiet) {
+            if (msg.from.startsWith('"')) {
+              const addr = msg.from.split("<")[1].replace(/>/g, "")
+              logger.info(addr)
+            } else {
+              logger.info(`${msg.from}`)
+            }
+          } else {
+            info(`${msg.seq} ${msg.from}`)
+          }
+        }
+        return
+      }
+
       const allMessages = await client.search({ all: true })
       const unreadMessages = await client.search({ unseen: true })
       const limit = Number.parseInt(options.limit || dv.scanLimit)
@@ -103,7 +123,6 @@ async function scanMailbox(account, options) {
         if (options.read) {
           await client.messageFlagsAdd(msg.seq, ["\\Seen"])
         }
-
         const seqString =
           chalk.blue(`Index: ${++ndx}, Seqno: ${msg.seq}`) +
           (msg.filter ? chalk.red(` ${msg.filter}`) : "")
@@ -164,7 +183,7 @@ export async function scanCommand(args, options, logger) {
         info(label)
         info("------------------------------------------------")
         await refreshFilters(account)
-        await scanMailbox(account, options)
+        await scanMailbox(account, options, logger)
       }
       return
     }
@@ -178,7 +197,7 @@ export async function scanCommand(args, options, logger) {
     }
 
     await refreshFilters(account)
-    await scanMailbox(account, options)
+    await scanMailbox(account, options, logger)
   } catch (err) {
     error(err)
   }
