@@ -216,7 +216,7 @@ export async function getFolderPath(client, name) {
  */
 export const dv = {
   accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all",
-  scanLimit: process.env.MM_SCAN_LIMIT || "5"
+  scanLimit: process.env.MM_SCAN_LIMIT || "12"
 }
 
 // ----------------------------------------------------------------------------

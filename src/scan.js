@@ -54,10 +54,14 @@ async function scanMailbox(account, options, logger) {
 
     const lock = await client.getMailboxLock(src)
     try {
+      const limit = Number.parseInt(options.limit || dv.scanLimit)
+      const skip = Number.parseInt(options.skip || "0")
+
       // Extract flagged messages
       if (options.extract) {
         const flaggedMessages = await client.search({ flagged: true })
-        const msglist = await fetchMessages(client, flaggedMessages.reverse())
+        const messagesToFetch = flaggedMessages.slice(-limit - skip, -skip || undefined).reverse()
+        const msglist = await fetchMessages(client, messagesToFetch)
         for (const msg of msglist) {
           // must use logger directly to handle the quiet option
           if (options.quiet) {
@@ -76,9 +80,12 @@ async function scanMailbox(account, options, logger) {
 
       const allMessages = await client.search({ all: true })
       const unreadMessages = await client.search({ unseen: true })
-      const limit = Number.parseInt(options.limit || dv.scanLimit)
-      const skip = Number.parseInt(options.skip || "0")
-      const messages = options.unread ? unreadMessages : allMessages
+      const flaggedMessages = await client.search({ flagged: true })
+      const messages = options.unread
+        ? unreadMessages
+        : options.tagged
+          ? flaggedMessages
+          : allMessages
       const messagesToFetch = messages.slice(-limit - skip, -skip || undefined).reverse()
       const msglist = await fetchMessages(client, messagesToFetch)
       const filterCounts = new Map()
@@ -108,7 +115,12 @@ async function scanMailbox(account, options, logger) {
               for (const msg of matches) {
                 if (msg.filter === undefined) {
                   msg.filter = filterName
-                  await client.messageMove(msg.seq, filterName)
+                  if (src !== filterName) {
+                    await client.messageMove(msg.seq, filterName)
+                  }
+                  if (options.tagged && src === filterName) {
+                    await client.messageFlagsRemove(msg.seq, ["\\Flagged"])
+                  }
                 }
               }
               filterCounts.set(filterName, matches.length)

@@ -9,10 +9,12 @@ accounts:
     port: 993
     tls: true
     filters:
-      - whitelist
       - blacklist
       - joboards
+      - news
       - unsubscribe
+      - vendors
+      - whitelist
     index: 1
   - account: marc
     type: imap
@@ -23,12 +25,12 @@ accounts:
     port: 993
     tls: true
     filters:
-      - whitelist
-      - joboards
-      - vendors
-      - news
       - blacklist
+      - joboards
+      - news
       - unsubscribe
+      - vendors
+      - whitelist
     index: 2
   - account: marc17
     type: imap

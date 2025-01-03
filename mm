@@ -36,6 +36,7 @@ try {
     .option("-r, --read", "mark emails as read")
     .option("-s, --skip", "skip number of emails to scan (default: 0)")
     .option("-u, --unread", "only show unread emails")
+    .option("-t, --tagged", "only show tagged/flagged emails")
     .option("-v, --verbose", "verbose mode")
     .option("-x, --extract", "extract the sender (flagged messages)")
     .action(commands.scan)
