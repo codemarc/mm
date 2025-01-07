@@ -1,0 +1,26 @@
+version: 1
+active: false
+
+account: 
+  name: birdie
+  type: imap
+  user: a.birdie.toldme@gmail.com
+  password: >-
+    a4430105399a3cd18060ed7956a02a59::d84bb524f03ef488a3638a7ad0eab80c16e33e8cf71b277281bf0bc94e8f66c0
+  host: imap.gmail.com
+  port: 993
+  tls: true
+
+rules: []
+
+rulesets: []
+
+filters:
+
+  - list: whitelist
+    folder: filtered
+    active: []
+
+  - list: news
+    folder: filtered/news
+    active: []

@@ -1,0 +1,42 @@
+version: 1
+active: true
+
+account: 
+  name: marc
+  type: imap
+  user: marc@codemarc.net
+  password: >-
+    67bc4d180feda0fbdf37d3c637815e3d::cb6951b36a679671ad353f2fb5cdf4f09b903d11d61dada946d2cfd077624165
+  host: imap.gmail.com
+  port: 993
+  tls: true
+
+rules: []
+
+rulesets: []
+
+filters:
+
+  - list: whitelist
+    folder: filtered
+    active: []
+
+  - list: finance
+    folder: filtered/finance
+    active: []
+
+  - list: gators
+    folder: filtered/gators
+    active: []
+
+  - list: jobs
+    folder: filtered/boards
+    active: []
+
+  - list: news
+    folder: filtered/news
+    active: []
+
+  - list: vendors
+    folder: filtered/vendors
+    active: []      
