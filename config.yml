@@ -1,6 +1,7 @@
 version: 1
 accounts:
-  - account: codemarc
+  - account: 
+    name: codemarc
     type: imap
     user: codemarc@gmail.com
     password: >-
@@ -16,7 +17,8 @@ accounts:
       - vendors
       - whitelist
     index: 1
-  - account: marc
+  - account: 
+    name: marc
     type: imap
     user: marc@codemarc.net
     password: >-
@@ -32,7 +34,8 @@ accounts:
       - vendors
       - whitelist
     index: 2
-  - account: marc17
+  - account: 
+    name: marc17
     type: imap
     user: marcgreenberg17@gmail.com
     password: >-
@@ -43,7 +46,8 @@ accounts:
     filters:
       - blacklist
     index: 3
-  - account: smashedata
+  - account: 
+    name: smashedata
     active: false
     type: imap
     user: smashedata@gmail.com
@@ -53,7 +57,8 @@ accounts:
     port: 993
     tls: true
     index: 4
-  - account: birdie
+  - account: 
+    name: birdie
     active: false
     type: imap
     user: abirdietoldme@gmail.com
