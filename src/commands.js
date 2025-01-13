@@ -1,10 +1,11 @@
-import { openCommand } from "./open.js"
-import { showCommand } from "./show.js"
-import { smashCommand } from "./smash.js"
-import { scanCommand } from "./scan.js"
-import { deleteCommand } from "./delete.js"
-import { cleanCommand } from "./clean.js"
-import { filterCommand } from "./filter.js"
+import { openCommand } from "./open2.js"
+import { showCommand } from "./show2.js"
+import { smashCommand } from "./smash2.js"
+import { scanCommand } from "./scan2.js"
+import { deleteCommand } from "./delete2.js"
+import { cleanCommand } from "./clean2.js"
+import { filterCommand } from "./filter2.js"
+import { explainCommand } from "./explain2.js"
 
 export {
   openCommand as open,
@@ -13,5 +14,6 @@ export {
   scanCommand as scan,
   deleteCommand as delete,
   cleanCommand as clean,
-  filterCommand as filter
+  filterCommand as filter,
+  explainCommand as explain
 }
