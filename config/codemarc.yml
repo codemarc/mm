@@ -11,11 +11,6 @@ account:
   port: 993
   tls: true
 
-alias:
-  - default: _unsorted
-  - shopping: filtered/shopping
-  - invest: filtered/invest
-
 rules:
   - set: save
     desc: save incomming mail
@@ -23,65 +18,17 @@ rules:
       - pick
       - parse
       - mark
+      - classify
       - save: inbox
 
-  - set: shop
+  - set: test
     rule:
       - load: inbox
-      - match:
-          senderEmail:
-            - domain: target.com
-            - domain: warbyparker.com
-            - is: shopbop@shopbop-mail.com
-      - move:
-          from: inbox
-          to: shopping
-      - drop: inbox
+      - classify
+      - save: inbox
 
-  - set: jobs
+  - set: sort
     rule:
       - load: inbox
-      - match:
-          senderEmail:
-            - domain: indeed.com
-            - domain: builtin.com
-      - move:
-          from: inbox
-          to: boards
-      - drop: inbox
-
-  - set: invest
-    rule:
-      - load: inbox
-      - match:
-          senderEmail:
-            - domain: expireinthemoney.com
-            - is: unusualwhales@substack.com
-      - move:
-          from: inbox
-          to: invest
-      - drop: inbox
-
-  - set: news
-    rule:
-      - load: inbox
-      - match:
-          senderEmail:
-            - domain: mckinsey.com
-            - domain: join1440.com
-            - domain: insideapple.apple.com
-      - move:
-          from: inbox
-          to: news
-      - drop: inbox
-
-  - set: finance
-    rule:
-      - load: inbox
-      - match:
-          senderEmail:
-            - domain: americanexpress.com
-      - move:
-          from: inbox
-          to: finance
+      - move
       - drop: inbox

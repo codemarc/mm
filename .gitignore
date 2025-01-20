@@ -76,4 +76,5 @@ jspm_packages/
 
 # mm
 swark-output/
-data/
+data/*.json
+

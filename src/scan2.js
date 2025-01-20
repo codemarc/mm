@@ -57,7 +57,7 @@ export async function scanCommand(args, options, logger) {
       verbose(`${total} messages matched across ${msgs.length} accounts`)
       for (const anwerset of msgs) {
         for (const msg of anwerset) {
-          verbose(`scan:[${msg.index}]:[${msg.seq}] ${msg.subject}`)
+          verbose(`scan:${msg.index}:${msg.seq}[${msg.category}] ${msg.subject}`)
         }
       }
     }

@@ -2,6 +2,7 @@ import cTable from "console.table"
 
 import fs from "node:fs"
 import path from "node:path"
+import yaml from "js-yaml"
 import chalk from "chalk"
 import { parsem } from "../parse.js"
 import fetch from "../fetch.js"
@@ -120,34 +121,40 @@ export async function mark(msglist, ...args) {
 // ----------------------------------------------------------------------------
 export async function move(msglist, ...args) {
   const [acct, options, client, ruleset, rule] = args
+  const { account } = acct
 
-  const mvlist = msglist.map((msg) => msg.seq)
-  if (mvlist.length === 0) return msglist
+  const catfile = path.join(process.cwd(), "data", `${account.name}.cats.yml`)
+  const categoryRules = yaml.load(fs.readFileSync(catfile, "utf8"))
+  verbose(`rule:move: loading ${catfile}`)
 
-  const src = await u.getFolderPath(client, rule.move?.from ?? options.folder)
-  if (src === undefined) {
-    error(chalk.red(`rule:move: source folder ${rule.move?.from ?? options.folder} is missing`))
-    return msglist
+  // Get valid categories from cats.yml
+  const cats = Object.entries(categoryRules || []).map(([key, value]) => key)
+  verbose(`rule:move: using cats ${cats}`)
+
+  const mbx = {}
+  for (const cat of cats) {
+    mbx[cat] = await u.getFolderPath(client, cat)
   }
-  const dst = await u.getFolderPath(client, rule.move?.to)
-  if (dst === undefined) {
-    error(chalk.red(`rule:move: target folder ${rule.move?.to} is missing`))
-    return msglist
-  }
 
+  const src = await u.getFolderPath(client, rule?.move ?? "inbox")
   const lock = await client.getMailboxLock(src)
   verbose(`rule:move: ${src} mailbox locked`)
+
+  const moved = []
   try {
-    await client.messageMove(mvlist, dst)
-    info(chalk.green(`Moved ${msglist.length} messages to ${dst}`))
+    for (const msg of msglist) {
+      await client.messageMove([msg.seq], mbx[msg.category])
+      moved.push(msg)
+      brief(`rule:move[${mbx[msg.category]}] moved ${msg.seq} ${msg.subject}`)
+    }
   } catch (err) {
-    if (options.verbose) verbose(chalk.red(err.stack))
-    else error(err)
+    error(chalk.red(err.stack))
   } finally {
     lock.release()
     verbose(`rule:move: ${src} mailbox unlocked`)
+    verbose(`rule:move: moved ${moved.length} messages`)
   }
-  return msglist
+  return moved
 }
 
 // ----------------------------------------------------------------------------
@@ -171,13 +178,12 @@ export async function save(msglist, ...args) {
       fs.writeFileSync(rule.save, JSON.stringify(msglist, null, 2))
       return msgs
     }
-    if (!options.folder) options.folder = rule.save
+    const filename = path.join(process.cwd(), "data", `${acct.account.name}.${rule.save}.json`)
+    fs.writeFileSync(filename, JSON.stringify(msglist, null, 2))
+    return msglist
   }
 
-  const filename = path.join(
-    path.join(process.cwd(), "data"),
-    `${acct.account.name}.${!options.folder ? options.ruleset : options.folder}.json`
-  )
+  const filename = path.join(process.cwd(), "data", `${acct.account.name}.${options.ruleset}.json`)
   fs.writeFileSync(filename, JSON.stringify(msglist, null, 2))
   return msglist
 }
@@ -225,4 +231,66 @@ export async function drop(msglist, ...args) {
   // save back the results
   await save(saved, acct, options, client, ruleset, rule)
   return msglist
+}
+
+// ----------------------------------------------------------------------------
+// classify rule
+// ----------------------------------------------------------------------------
+export async function classify(msglist, ...args) {
+  const [acct, options, client, ruleset, rule] = args
+  const { account } = acct
+
+  // Load category rules from YAML file
+  const catfile = path.join(process.cwd(), "data", `${account.name}.cats.yml`)
+  const categoryRules = yaml.load(fs.readFileSync(catfile, "utf8"))
+  verbose(`rule:classify: loading ${catfile}`)
+
+  // Get valid categories from cats.yml
+  const validCats = Object.entries(categoryRules || []).map(([key, value]) => key)
+  verbose(`rule:classify: using cats ${validCats}`)
+
+  const classifyMessage = (msg, categories) => {
+    // Extract key fields from message
+    const { senderEmail = "", subject = "", text = [] } = msg
+    const content = [subject, ...(Array.isArray(text) ? text : [text])].join(" ").toLowerCase()
+
+    // Score each category based on rules matches
+    const scores = {}
+
+    for (const [category, rules] of Object.entries(categoryRules)) {
+      if (!categories.includes(category)) continue
+
+      scores[category] = 0
+
+      // Check domain matches
+      if (
+        rules.domains?.some((domain) => senderEmail.toLowerCase().includes(domain.toLowerCase()))
+      ) {
+        scores[category] += 5
+      }
+
+      // Check keyword matches
+      if (rules.keywords?.some((keyword) => content.includes(keyword.toLowerCase()))) {
+        scores[category] += 3
+      }
+    }
+
+    // Find category with highest score
+    let bestMatch = "undefined"
+    let highScore = 0
+
+    for (const [category, score] of Object.entries(scores)) {
+      if (score > highScore) {
+        highScore = score
+        bestMatch = category
+      }
+    }
+    return bestMatch
+  }
+
+  // Classify each message
+  return msglist.map((msg) => ({
+    ...msg,
+    category: classifyMessage(msg, validCats)
+  }))
 }

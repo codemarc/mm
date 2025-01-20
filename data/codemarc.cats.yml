@@ -1,0 +1,81 @@
+bills:
+  domains:
+    - americanexpress.com
+    - bankofamerica.com
+    - chase.com
+    - linkedin.com
+    - oatesenergy.com
+    - synchrony.com
+    - venmo.com
+  keywords:
+    - payment
+    - bill
+    - statement
+    - balance
+    - due
+
+invest:
+  domains:
+    - schwab.com
+    - unusualwhales.com
+  keywords:
+    - stock
+    - trade
+    - invest
+    - portfolio
+    - market
+
+shopping:
+  domains:
+    - target.com
+    - warbyparker.com
+    - shopbop.com
+    - houzz.com
+    - hellofresh.com
+  keywords:
+    - order
+    - shipping
+    - delivery
+    - purchase
+    - cart
+
+news:
+  domains:
+    - medium.com
+    - mckinsey.com
+    - join1440.com
+    - insideapple.apple.com
+    - genai.works
+    - beehiiv.com
+  keywords:
+    - news
+    - article
+    - report
+    - analysis
+    - update
+    - newsletter
+
+notify:
+  domains:
+    - notifications.com
+    - alerts.com
+    - noreply
+    - donotreply
+    - automated
+  keywords:
+    - notification
+    - alert
+    - confirm
+    - verify
+    - notice
+
+boards:
+  domains:
+    - getro.com
+
+undefined:
+  domains:
+    - academia-mail.com
+    - financialmarketsdigest.com
+    - newyorktimes.com
+    - expireinthemoney.com
