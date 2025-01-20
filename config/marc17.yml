@@ -1,26 +1,21 @@
 version: 1
-active: false
-
-account: 
+active: true
+account:
   name: marc17
   type: imap
   user: marcgreenberg17@gmail.com
   password: >-
-    90db260b58af9fb6e508b8313bf23ed2::49bb084b4203e654f8979d722b47e8ed7169ff7fdf261b5ce1377a721ab4b194
+    4017983a2e44448b542da3919f27ce52::69a86ecbb87a36c5dee134324ad1d6ef3dc37206aa27b31e1ea31f5b21bdddb1
   host: imap.gmail.com
   port: 993
   tls: true
-
 rules: []
-
 rulesets: []
-
 filters:
-
   - list: whitelist
     folder: filtered
     active: []
-
   - list: news
     folder: filtered/news
     active: []
+index: 3

@@ -1,49 +1,87 @@
 version: 1
 active: true
+index: 1
 account:
   name: codemarc
   type: imap
   user: codemarc@gmail.com
   password: >-
-    495eae1be1c15ff6e574cfeae7e70a81::56136698f2d1bee2f0a787f0f4ae20fda8b360d911424b351a4f26d45af6dae8
+    bab2a78f407b20b59d36064ed6b74658::c6149e181e7ed00b6111b935c1fa6b35e09443e4864c3e21bd784c0d8f4236fd
   host: imap.gmail.com
   port: 993
   tls: true
-rules: []
-rulesets: []
-filters:
-  - list: whitelist
-    folder: filtered
-    active:
-      - donotreply@mail.ereceiptshell.com
-    found: null
-  - list: finance
-    folder: filtered/finance
-    active: []
-    found:
-      - americanexpress@member.americanexpress.com
-  - list: gators
-    folder: filtered/gators
-    active: []
-  - list: jobs
-    folder: filtered/boards
-    active: []
-    found:
-      - hit-reply@linkedin.com
-  - list: news
-    folder: filtered/news
-    active: []
-    found:
-      - lenny@substack.com
-      - dailydigest@email.join1440.com
-      - newsletters-noreply@linkedin.com
-      - newsdigest@insideapple.apple.com
-  - list: notify
-    folder: filtered/notify
-    active:
-      - friendupdates@facebookmail.com
-      - messaging-digest-noreply@linkedin.com
-    found: []
-  - list: vendors
-    folder: filtered/vendors
-    active: []
+
+alias:
+  - default: _unsorted
+  - shopping: filtered/shopping
+  - invest: filtered/invest
+
+rules:
+  - set: save
+    desc: save incomming mail
+    rule:
+      - pick
+      - parse
+      - mark
+      - save: inbox
+
+  - set: shop
+    rule:
+      - load: inbox
+      - match:
+          senderEmail:
+            - domain: target.com
+            - domain: warbyparker.com
+            - is: shopbop@shopbop-mail.com
+      - move:
+          from: inbox
+          to: shopping
+      - drop: inbox
+
+  - set: jobs
+    rule:
+      - load: inbox
+      - match:
+          senderEmail:
+            - domain: indeed.com
+            - domain: builtin.com
+      - move:
+          from: inbox
+          to: boards
+      - drop: inbox
+
+  - set: invest
+    rule:
+      - load: inbox
+      - match:
+          senderEmail:
+            - domain: expireinthemoney.com
+            - is: unusualwhales@substack.com
+      - move:
+          from: inbox
+          to: invest
+      - drop: inbox
+
+  - set: news
+    rule:
+      - load: inbox
+      - match:
+          senderEmail:
+            - domain: mckinsey.com
+            - domain: join1440.com
+            - domain: insideapple.apple.com
+      - move:
+          from: inbox
+          to: news
+      - drop: inbox
+
+  - set: finance
+    rule:
+      - load: inbox
+      - match:
+          senderEmail:
+            - domain: americanexpress.com
+      - move:
+          from: inbox
+          to: finance
+      - drop: inbox

@@ -73,3 +73,7 @@ jspm_packages/
 # Temporary files
 *.tmp
 *.temp
+
+# mm
+swark-output/
+data/

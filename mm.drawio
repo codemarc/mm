@@ -1,0 +1,13 @@
+<mxfile host="65bd71144e">
+    <diagram id="yzHGt1fm3m9R8fnq8IZD" name="Page-1">
+        <mxGraphModel dx="2114" dy="479" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="4" value="&#10;graph TB&#10;    subgraph CLI Commands&#10;        run[Run Command]&#10;        scan[Scan Command]&#10;        delete[Delete Command]&#10;        clean[Clean Command] &#10;        show[Show Command]&#10;        open[Open Command]&#10;        filter[Filter Command]&#10;        smash[Smash Command]&#10;    end&#10;&#10;    subgraph Core Functionality&#10;        util[Utilities]&#10;        imap[IMAP Client]&#10;        config[Configuration]&#10;    end&#10;&#10;    subgraph Email Processing&#10;        rules[Rule Engine]&#10;        filters[Filter Engine]&#10;        crypto[Encryption]&#10;    end&#10;&#10;    run --&gt; util&#10;    scan --&gt; imap&#10;    scan --&gt; rules&#10;    delete --&gt; imap&#10;    clean --&gt; imap&#10;    show --&gt; config&#10;    filter --&gt; filters&#10;    filter --&gt; imap&#10;    smash --&gt; crypto&#10;    smash --&gt; config&#10;&#10;    util --&gt; imap&#10;    util --&gt; config&#10;    util --&gt; crypto&#10;&#10;    imap --&gt; filters&#10;    imap --&gt; rules&#10;" style="shadow=0;dashed=0;align=left;strokeWidth=1;shape=mxgraph.mermaid.abstract.mermaid;labelBackgroundColor=#ffffff;noLabel=1;theme=default;" vertex="1" parent="1">
+                    <mxGeometry x="-850" width="850" height="720" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

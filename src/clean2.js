@@ -12,7 +12,7 @@ export async function explain() {
 then it empties the drafts, spam and trash folders
 
   * If you pass no arguments then clean applies to all accounts
-  * if you pass "list" in the account name then hte account list is displyed
+  * if you pass "list" in the account name then hte account list is displayed
   * If you pass the account name or index then clean applies to that account
 
 try mm clean --help for more information

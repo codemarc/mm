@@ -1,26 +1,21 @@
 version: 1
 active: false
-
-account: 
+account:
   name: smashedata
   type: imap
   user: smashedata@gmail.com
   password: >-
-    fa91d5310ca0a3bf66c704315d6a677f::ae70956e51c4a089ad642658235fede2cdc8939ef588ea46d925d1f3d295da22
+    c74cbb7bd05057884c2f8f1d54460888::251da41db7e627cf225524e8af02a15cca2b3c7266eec01caa4587beb1b32d3b
   host: imap.gmail.com
   port: 993
   tls: true
-
 rules: []
-
 rulesets: []
-
 filters:
-
   - list: whitelist
     folder: filtered
     active: []
-
   - list: news
     folder: filtered/news
     active: []
+index: 0

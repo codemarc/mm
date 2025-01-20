@@ -1,6 +1,6 @@
 {
   "name": "@codemarc/mm",
-  "version": "0.0.9",
+  "version": "1.0.0",
   "description": "mail minder - code to manage your inbox",
   "main": "mm",
   "type": "module",
@@ -18,6 +18,7 @@
     "mm": "mm"
   },
   "scripts": {
+    "postinstall": "patch-package",
     "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "dependencies": {
@@ -27,13 +28,15 @@
     "imapflow": "^1.0.171",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
-    "mailparser": "^3.7.2"
+    "mailparser": "^3.7.2",
+    "openai": "^4.78.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",
     "@biomejs/biome": "^1.9.4",
     "babel-jest": "^29.7.0",
-    "jest": "^29.7.0"
+    "jest": "^29.7.0",
+    "patch-package": "^8.0.0"
   },
   "jest": {
     "transform": {},

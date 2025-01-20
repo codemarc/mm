@@ -1,11 +1,11 @@
 version: 1
-active: true
+active: false
 account:
-  name: marc
+  name: sample
   type: imap
-  user: marc@codemarc.net
+  user: sample@gmail.com
   password: >-
-    cbd22680d3b47dcdb5033077a4b1079e::d73de2f608088f905bf5f25223fce52dbe85239e264553d7b27adac90e30573c
+    82c572a50645012051ff229be854f26f::b7f3599335f249b7ac9a2bccd0783d7e073f673c89d47cc9c221bdb13ccb2747
   host: imap.gmail.com
   port: 993
   tls: true
@@ -15,32 +15,47 @@ rules:
     desc: create a json list of email messages
     rule:
       - parse
-      - subject
+      - format
       - save
   - set: plain
     file: common
     desc: create a plain text list of email subjects
     rule:
       - parse
-      - format
-      - save
 filters:
   - list: whitelist
     folder: filtered
-    active: []
+    active:
+      - donotreply@mail.ereceiptshell.com
+    found: null
   - list: finance
     folder: filtered/finance
     active: []
+    found:
+      - americanexpress@member.americanexpress.com
   - list: gators
     folder: filtered/gators
     active: []
   - list: jobs
     folder: filtered/boards
     active: []
+    found:
+      - hit-reply@linkedin.com
   - list: news
     folder: filtered/news
     active: []
+    found:
+      - lenny@substack.com
+      - dailydigest@email.join1440.com
+      - newsletters-noreply@linkedin.com
+      - newsdigest@insideapple.apple.com
+  - list: notify
+    folder: filtered/notify
+    active:
+      - friendupdates@facebookmail.com
+      - messaging-digest-noreply@linkedin.com
+    found: []
   - list: vendors
     folder: filtered/vendors
     active: []
-index: 2
+index: 0

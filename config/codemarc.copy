@@ -1,0 +1,111 @@
+version: 1
+active: true
+account:
+  name: codemarc
+  type: imap
+  user: codemarc@gmail.com
+  password: >-
+    bab2a78f407b20b59d36064ed6b74658::c6149e181e7ed00b6111b935c1fa6b35e09443e4864c3e21bd784c0d8f4236fd
+  host: imap.gmail.com
+  port: 993
+  tls: true
+rules:
+  - set: first
+    file: common
+    desc: create a json list of email messages
+    folders:
+      dst: _unsorted
+    rule:
+      - check
+      - parse
+      - format
+      - save
+      - moveto: _unsorted
+  - set: subject
+    file: common
+    desc: create a json list of email subjects
+    rule:
+      - parse
+      - subject
+      - save
+  - set: plain
+    file: common
+    desc: create a plain text list of email subjects
+    rule:
+      - parse
+      - format
+      - save
+  - set: news
+    file: news
+    folders:
+      src: _unsorted
+      dst: news
+    rule:
+      - check
+      - pick:
+          - unread
+      - parse
+      - match:
+          senderEmail:
+            - is: lenny@substack.com
+            - is: dailydigest@email.join1440.com
+            - is: newsletters-noreply@linkedin.com
+            - is: newsdigest@insideapple.apple.com
+      - mark: read
+      - moveto: dst
+
+filters:
+  - name: sort
+    folders:
+      - _unsorted
+    rules:
+      - set: sort
+        file: sort
+        description: categorize messages by subject
+        on: unread
+        rule:
+          - parse
+          - sort
+          - move
+  - list: whitelist
+    folder: filtered
+    active:
+      - donotreply@mail.ereceiptshell.com
+    found: null
+  - list: finance
+    folder: filtered/finance
+    active: []
+    found:
+      - americanexpress@member.americanexpress.com
+  - list: gators
+    folder: filtered/gators
+    active: []
+  - list: jobs
+    folder: filtered/boards
+    active: []
+    found:
+      - hit-reply@linkedin.com
+  - list: news
+    folder: filtered/news
+    active: []
+    found:
+      - lenny@substack.com
+      - dailydigest@email.join1440.com
+      - newsletters-noreply@linkedin.com
+      - newsdigest@insideapple.apple.com
+  - list: notify
+    folder: filtered/notify
+    active:
+      - friendupdates@facebookmail.com
+      - messaging-digest-noreply@linkedin.com
+    found: []
+  - list: vendors
+    folder: filtered/vendors
+    active: []
+index: 1
+categorization:
+  enabled: false
+  topic: email content
+  categoryField: category
+  categoryCount: 5-8
+  model: gpt-3.5-turbo

@@ -36,10 +36,10 @@ export async function explainCommand(args, options, logger) {
     if (commands[args.what]) {
       const { explain: explainit } = await import(`./${args.what}2.js`)
       if (typeof explainit === "function") explainit()
-      else error(`${args.what} has no explaination`)
+      else error(`${args.what} has no explanation`)
       return
     }
-    error(`${args.what} has no explaination`)
+    error(`${args.what} has no explanation`)
   } catch (err) {
     if (options.verbose) verbose(chalk.red(err.stack))
     else error(err)

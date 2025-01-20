@@ -1,240 +1,347 @@
-// Description: Utility functions for the mailman CLI.
-// ImapFlow: https://imapflow.com/module-imapflow-ImapFlow.html
-// lodash: https://lodash.com/docs/4.17.15
-import { ImapFlow } from "imapflow"
-import _ from "lodash"
+// ----------------------------------------------------------------------------
+// Utility functions for mm CLI.
+// ----------------------------------------------------------------------------
+
+// crypto: https://nodejs.org/api/crypto.html
+import crypto from "node:crypto"
+
+// fs: https://nodejs.org/api/fs.html
 import fs from "node:fs"
+
+// path: https://nodejs.org/api/path.html
 import path from "node:path"
-import { decrypt } from "./smash.js"
+
+// chalk: https://www.npmjs.com/package/chalk
 import chalk from "chalk"
 
+// cTable: https://www.npmjs.com/package/console.table
+import cTable from "console.table"
+
+// ImapFlow: https://imapflow.com/module-imapflow-ImapFlow.html
+import { ImapFlow } from "imapflow"
+
+// js-yaml: https://www.npmjs.com/package/js-yaml
+import yaml from "js-yaml"
+
+// lodash: https://lodash.com/docs/4.17.15
+import _ from "lodash"
+
+import pak from "../package.json" assert { type: "json" }
+
+// ----------------------------------------------------------------------------
+// Default values for the CLI
+// ----------------------------------------------------------------------------
+// TODO: align documented defaults, in .env.defau1lts with these values
+export const dv = {
+  pak: pak,
+  config_path: path.resolve(
+    path.normalize(process.env.MM_CONFIG_PATH || path.join(process.cwd(), "config"))
+  ),
+  accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all",
+  scanLimit: process.env.MM_SCAN_LIMIT || "12",
+  openCommand: process.env.MM_OPEN_COMMAND || "outlook",
+  rulesFolder: process.env.MM_RULES_FOLDER || "src/rules",
+  rulesFile: process.env.MM_RULES_FILE || "common",
+  rulesSet: process.env.MM_RULES_SET || "save"
+}
+
+// ----------------------------------------------------------------------------
+// timestamp function that returns a string in the
+// format of "YYYYmmdd HH:MM:SS:ms am/pm"
+// ----------------------------------------------------------------------------
+const ts = () => {
+  const dt = new Date()
+  const ms = dt.getMilliseconds().toString().padStart(3, "0")
+  const ampm = dt.getHours() >= 12 ? "pm" : "am"
+  const t = dt
+    .toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true
+    })
+    .replace(/(\d+):(\d+):(\d+)\s(am|pm)/i, "$1:$2:$3")
+
+  return `${t}:${ms} ${ampm}`
+}
+
+// ----------------------------------------------------------------------------
+// Instance variables
+// ----------------------------------------------------------------------------
 let loggerInstance = null
 let optionsInstance = null
 
 export function setInstance(iv) {
-  loggerInstance = iv.logger
-  optionsInstance = iv.options
+  const { args, options, logger } = iv
+  loggerInstance = logger
+  optionsInstance = options
+  try {
+    const config = load()
+    const accounts = Object.keys(config)
+    const activeAccounts = accounts.filter((account) => config[account].active)
+    const inactiveAccounts = accounts.filter((account) => !config[account].active)
+    verbose(`${accounts.length} accounts: [${accounts.join(", ")}]`)
+    verbose(`${activeAccounts.length} active: [${activeAccounts.join(", ")}]`)
+    verbose(`${inactiveAccounts.length} inactive: [${inactiveAccounts.join(", ")}]`)
+
+    // if no account is specified then use the default account
+    options.account = args?.account ? args.account : dv.accountAlias
+    verbose(`args.account=${args?.account}`)
+    verbose(`options.account=${options.account}`)
+
+    if (isAccount("list")) {
+      const tableData = []
+      for (const account of Object.keys(config)) {
+        if (!options.all && !config[account].active) continue
+
+        tableData.push({
+          index: config[account].index,
+          account: account,
+          // active: config[account].active,
+          rules: config[account].rules.length,
+          filters: config[account].filters.length
+        })
+      }
+      info(`\n${cTable.getTable(tableData)}`)
+      return null
+    }
+    return config
+  } catch (err) {
+    error(err)
+  }
+  return null
 }
 
+// ----------------------------------------------------------------------------
+// info function
+// ----------------------------------------------------------------------------
 export function info(message) {
   if (!optionsInstance.quiet && !optionsInstance.brief) {
     ;(loggerInstance.info ?? console)(message)
   }
 }
+
+// ----------------------------------------------------------------------------
+// error function
+// ----------------------------------------------------------------------------
 export function error(message) {
   if (!optionsInstance.quiet) {
     ;(loggerInstance.error ?? console)(chalk.red(message))
   }
 }
+
+// ----------------------------------------------------------------------------
+// verbose function
+// ----------------------------------------------------------------------------
 export function verbose(message) {
   if (!optionsInstance.quiet && optionsInstance.verbose) {
-    ;(loggerInstance.info ?? console)(chalk.blue(message))
-  }
-}
-export function brief(message) {
-  if (optionsInstance.brief) {
-    ;(loggerInstance.info ?? console)(chalk.green(message))
+    ;(loggerInstance.info ?? console)(`${ts()} ${chalk.blue(message)}`)
   }
 }
 
+// ----------------------------------------------------------------------------
+// brief function
+// ----------------------------------------------------------------------------
+export function brief(message) {
+  if (optionsInstance.brief) {
+    ;(loggerInstance.info ?? console)(`${ts()} ${chalk.magenta(message)}`)
+  }
+}
+
+// ----------------------------------------------------------------------------
+// isAccount function
+// ----------------------------------------------------------------------------
+export function isAccount(value2check = "all") {
+  return optionsInstance?.account === value2check
+}
+
+// ----------------------------------------------------------------------------
+// isAccountAll function
+// ----------------------------------------------------------------------------
 export function isAccountAll() {
   return optionsInstance.account === "all" || optionsInstance.account === "0"
 }
 
-/**
- * ----------------------------------------------------------------------------
- * Retrieves an account from the provided configuration based on the given alias.
- *
- * @param {Object} config - The configuration object containing the accounts
- * @param {Array} config.accounts - Array of account configurations
- * @param {string|number|boolean} [alias] - The alias or index of the account to retrieve.
- * @returns {Object|undefined} The account object if found, undefined otherwise
- * ---------------------------------------------------------------------------
- */
-export function getAccount(config, alias) {
-  if (typeof alias === "boolean" || alias === undefined) {
-    // return _.first(config.accounts);
-    return undefined
-  }
-  if (typeof alias === "string" && alias.length > 0) {
-    const acct = _.find(config.accounts, { account: alias })
-    if (acct) {
-      return acct
-    }
-  }
-  const accno = Number.parseInt(alias)
-  if (Number.isNaN(accno) || accno.toString() !== alias) {
-    return undefined
-  }
-  return config.accounts[accno - 1]
-}
-
-/**
- * ----------------------------------------------------------------------------
- * Gets a comma-separated list of account names from the configuration
- *
- * @param {Object} config - The configuration object containing the accounts
- * @param {Array} config.accounts - Array of account configurations
- * @returns {Array<string>} Array of account names
- * ----------------------------------------------------------------------------
- */
-export function getAccountNames(config) {
-  const accounts = config?.accounts
-  if (!accounts) return []
-  if (Array.isArray(accounts)) {
-    return _.get(config, "accounts", [])
-      .map((acc) => acc.account)
-      .toString()
-      .split(",")
-      .filter(Boolean)
-  }
-  return Object.keys(accounts)
-}
-
-/**
- * ----------------------------------------------------------------------------
- * Refreshes account filters by loading additional filter definitions from files
- *
- * @param {Object} account - The account configuration to refresh
- * @param {Array<string>} [account.filters] - Array of filter definitions
- * @returns {Promise<Object>} The updated account configuration
- * ------------------------------------------------------------------------
- */
-export async function refreshFilters(account) {
-  if (account.filters) {
-    for (const filter of account.filters) {
-      const filename = path.join(
-        process.cwd(),
-        process.env.MM_FILTERS_PATH ?? "filters",
-        `${account.account}.${filter}`
-      )
-      if (!fs.existsSync(filename)) {
-        continue
-      }
-      const list = (await fs.promises.readFile(filename, "utf8")).split("\n")
-      if (!account.lists) {
-        account.lists = {}
-      }
-      account.lists[filter] = list.concat(account?.lists[filter] ?? [])
-    }
-  }
-  return account
-}
-
-/**
- * ----------------------------------------------------------------------------
- * Prints account names to the logger in either quiet or verbose mode
- *
- * @param {Object} config - The configuration object containing the accounts
- * @param {Object} options - Command options
- * @param {boolean} options.quiet - Whether to print in quiet mode
- * @param {Object} logger - Logger instance
- * @param {Function} logger.info - Info logging function
- * ------------------------------------------------------------------------
- */
-export function printAccountNames(config, options, logger) {
-  const field = "account"
-  if (options.quiet) {
-    logger.info(_.map(config.accounts, field).toString().replace(/,/g, "\n"))
-  } else {
-    const accounts = _.map(config.accounts, field).toString().split(",")
-    let count = 0
-    for (const account of accounts) {
-      logger.info(`${count + 1}. ${account}`)
-      count++
-    }
-  }
-}
-
-/**
- * ----------------------------------------------------------------------------
- * Rounds a date to the nearest minute
- *
- * @param {Date|string|number} date - Date to round
- * @returns {Date} New date object rounded to minutes
- * @throws {Error} If the date is invalid
- * ------------------------------------------------------------------------
- */
-export function roundToMinutes(date) {
-  const d = new Date(date)
-  if (Number.isNaN(d.getTime())) {
-    throw new Error("Invalid date")
-  }
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes())
-}
-
-/**
- * ----------------------------------------------------------------------------
- * Creates an ImapFlow instance for the given account
- *
- * @param {Object} account - Account configuration
- * @param {string} account.host - IMAP server host
- * @param {number} account.port - IMAP server port
- * @param {boolean} [account.tls] - Whether to use TLS
- * @param {string} account.user - Username
- * @param {string} account.password - Encrypted password
- * @param {Object} options - Command options
- * @param {boolean} options.verbose - Enable verbose logging
- * @param {Object} logger - Logger instance
- * @returns {ImapFlow} Configured ImapFlow instance
- * ------------------------------------------------------------------------
- */
-export function getImapFlow(account) {
+// ----------------------------------------------------------------------------
+// Gets an ImapFlow Instance
+// ----------------------------------------------------------------------------
+export function getImapFlow(account, nologger) {
   return new ImapFlow({
     host: account.host,
     port: account.port,
     secure: account.tls !== false,
     auth: { user: account.user, pass: decrypt(account.password, false) },
-    logger: optionsInstance.verbose ? loggerInstance : false
+    logger: nologger ? false : optionsInstance.verbose ? loggerInstance : false
   })
 }
 
-/**
- * ----------------------------------------------------------------------------
- * Gets the correct folder path accounting for Gmail's special folder structure
- * @param {Object} client - IMAP client instance
- * @param {string} name - Folder name to look up
- * @returns {Promise<string>} The correct folder path
- * ----------------------------------------------------------------------------
- *
- */
+// -------------------------------------------------------------------------------
+// Retrieves an account from the provided configuration based on the given alias.
+// -------------------------------------------------------------------------------
+export function getAccount(config, alias) {
+  if (typeof alias === "boolean" || alias === undefined) {
+    return undefined
+  }
+  if (typeof alias === "string" && alias.length > 0) {
+    if (config[alias]) return config[alias]
+  }
+  const accno = Number.parseInt(alias)
+  if (Number.isNaN(accno) || accno.toString() !== alias) {
+    return undefined
+  }
+  return config[Object.keys(config).find((account) => config[account].index === accno)]
+}
+
+// ------------------------------------------------------------------------
+// load config
+// ------------------------------------------------------------------------
+export const load = (cFile) => {
+  // return an object whose keys are the config name and the values are the config object
+  let config = {}
+
+  // validate the config directory exists
+  if (!fs.existsSync(dv.config_path)) {
+    error(`config directory not found: ${dv.config_path}`)
+    return config
+  }
+
+  // if cFile is falsy or all, we are asking for the all the configs
+  // to get the config names use config.keys()
+  if (!cFile || cFile === "all") {
+    verbose("loading config list")
+    const files = fs.readdirSync(dv.config_path)
+    for (const file of files) {
+      const ext = path.extname(file)
+      if (ext === ".yml" || ext === ".yaml") {
+        const name = path.basename(file, ext)
+        config = Object.assign(config, load(name))
+      }
+    }
+    return config
+  }
+
+  // if cFile is provided then we are asking for a specific config
+  const configFile = path.join(dv.config_path, `${cFile}.yml`)
+
+  if (!fs.existsSync(configFile)) {
+    error(`config file not found: ${configFile}`)
+    return config
+  }
+
+  // load the config file
+  try {
+    config[cFile] = yaml.load(fs.readFileSync(configFile, "utf8"))
+  } catch (err) {
+    error(err)
+  }
+  return config
+}
+
+// ------------------------------------------------------------------------
+// save config
+// ------------------------------------------------------------------------
+export const save = (cFile, config) => {
+  // validate the config directory exists
+  if (!fs.existsSync(dv.config_path)) {
+    error(`config directory not found: ${dv.config_path}`)
+    return
+  }
+  // if cFile is provided then we are asking for a specific config
+  const configFile = path.join(dv.config_path, `${cFile}.yml`)
+  verbose(`validating config: ${configFile}`)
+
+  if (!fs.existsSync(configFile)) {
+    error(`config file not found: ${configFile}`)
+    return
+  }
+
+  // save the file
+  try {
+    fs.writeFileSync(configFile, yaml.dump(config))
+  } catch (err) {
+    error(err)
+  }
+  return config
+}
+
+// ------------------------------------------------------------------------
+// getFolderPath
+// ------------------------------------------------------------------------
 export async function getFolderPath(client, name) {
-  if (name === undefined || name.toLowerCase() === "inbox") {
+  if (name?.toLowerCase() === "inbox") {
     return "INBOX"
   }
   const folders = await client.list()
+  const folder = _.find(folders, (f) => f.name === name)?.path
+
   if (name === "Archive") {
-    return _.find(folders, (f) => f.name === name)?.path ?? "[Gmail]/All Mail"
+    return folder ?? "[Gmail]/All Mail"
   }
-  return _.find(folders, (f) => f.name === name)?.path
+  return folder ?? _.find(folders, (f) => f.path === name)?.path
 }
 
-/**
- * ----------------------------------------------------------------------------
- * Default values for the CLI
- * ----------------------------------------------------------------------------
- */
-export const dv = {
-  accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all",
-  scanLimit: process.env.MM_SCAN_LIMIT || "12"
+// ------------------------------------------------------------------------
+// getcrypt
+// ------------------------------------------------------------------------
+export const getcrypt = (preseed) => {
+  const separator = "::"
+  const seed =
+    preseed !== undefined && typeof preseed === "string" ? preseed : process.env.MM_CRYPTOKEY
+  if (!seed) throw new Error("No seed provided")
+  const key = crypto.createHash("sha256").update(seed).digest("hex").slice(16, 48)
+  return { key, separator }
+}
+
+// ------------------------------------------------------------------------
+// Encrypts a string using AES-256-CBC encryption
+// ------------------------------------------------------------------------
+export const encrypt = (string, preseed) => {
+  const { key, separator } = getcrypt(preseed)
+  try {
+    const rando = crypto.randomBytes(16)
+    const cipher = crypto.createCipheriv("aes-256-cbc", key, rando)
+    let encryptedString = cipher.update(string)
+    encryptedString = Buffer.concat([encryptedString, cipher.final()])
+    return rando.toString("hex") + separator + encryptedString.toString("hex")
+  } catch (e) {
+    throw new Error(`Encryption failed: ${e.message}\n`)
+  }
+}
+
+// ------------------------------------------------------------------------
+// Decrypts an AES-256-CBC encrypted string
+// ------------------------------------------------------------------------
+export const decrypt = (string, preseed) => {
+  const { key, separator } = getcrypt(preseed)
+  try {
+    const split = string.split(separator)
+    const iv = Buffer.from(split[0], "hex")
+    split.shift()
+    const encryptedText = Buffer.from(split.join(separator), "hex")
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv)
+    let decrypted = decipher.update(encryptedText)
+    decrypted = Buffer.concat([decrypted, decipher.final()])
+    return decrypted.toString()
+  } catch (e) {
+    throw new Error(`Decryption failed: ${e.message}\n`)
+  }
 }
 
 // ----------------------------------------------------------------------------
 // Exports
 // ----------------------------------------------------------------------------
 export default {
+  dv,
   setInstance,
   info,
   error,
   verbose,
   brief,
-  getImapFlow,
+  isAccount,
   isAccountAll,
-  getAccount,
-  getAccountNames,
-  refreshFilters,
-  printAccountNames,
-  roundToMinutes,
+  load,
+  save,
   getFolderPath,
-  dv
+  encrypt,
+  decrypt
 }

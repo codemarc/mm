@@ -42,8 +42,6 @@ MM_CRYPTOKEY="your-secret-key"
 # Optional - default email account
 MM_DEFAULT_ACCOUNT="work"
 
-# Optional - filter path for custom rules
-MM_FILTERS_PATH="./filters"
 ```
 Then update your `config.yml`
 
