@@ -158,16 +158,6 @@ export async function move(msglist, ...args) {
 }
 
 // ----------------------------------------------------------------------------
-// subject rule
-// ----------------------------------------------------------------------------
-export async function subject(msglist, ...args) {
-  const [acct, options, client, ruleset, rule] = args
-  const answer = []
-  for (const msg of msglist) answer.push(msg.subject)
-  return answer
-}
-
-// ----------------------------------------------------------------------------
 // save rule
 // ----------------------------------------------------------------------------
 export async function save(msglist, ...args) {

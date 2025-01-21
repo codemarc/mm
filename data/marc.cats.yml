@@ -1,20 +1,20 @@
 ai:
   domains:
     - openai.com
+    - anthropic.com
   keywords:
-    - generative
+    - artifical
+    - intelligence
     - gpt
-    - ai
-    - llm
-    - prompt
-    - chat
-    - conversation
-    - agent
-    - assistant
-    - model
 
 bills:
   domains:
+    - americanexpress.com
+    - bankofamerica.com
+    - chase.com
+    - linkedin.com
+    - oatesenergy.com
+    - synchrony.com
     - venmo.com
   keywords:
     - payment
@@ -42,6 +42,7 @@ news:
     - insideapple.apple.com
     - genai.works
     - beehiiv.com
+    - tldrnewsletter.com
   keywords:
     - news
     - article
@@ -64,10 +65,14 @@ notify:
     - verify
     - notice
 
-boards:
+jobsmm open:
   domains:
-    - getro.com
     - theladders.com
+  keywords:
+    - job
+    - career
+    - resume
+    - hiring
 
 vendors:
   domains:

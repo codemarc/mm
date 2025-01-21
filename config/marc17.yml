@@ -1,5 +1,6 @@
 version: 1
 active: true
+index: 3
 account:
   name: marc17
   type: imap
@@ -9,13 +10,25 @@ account:
   host: imap.gmail.com
   port: 993
   tls: true
-rules: []
-rulesets: []
-filters:
-  - list: whitelist
-    folder: filtered
-    active: []
-  - list: news
-    folder: filtered/news
-    active: []
-index: 3
+
+rules:
+  - set: save
+    desc: save incomming mail
+    rule:
+      - pick
+      - parse
+      - mark
+      - classify
+      - save: inbox
+
+  - set: test
+    rule:
+      - load: inbox
+      - classify
+      - save: inbox
+
+  - set: sort
+    rule:
+      - load: inbox
+      - move
+      - drop: inbox

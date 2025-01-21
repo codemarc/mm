@@ -1,5 +1,6 @@
 version: 1
 active: true
+index: 2
 account:
   name: marc
   type: imap
@@ -9,38 +10,28 @@ account:
   host: imap.gmail.com
   port: 993
   tls: true
+
 rules:
-  - set: first
-    file: common
-    desc: create a json list of email messages
+  - set: save
+    desc: save incomming mail
     rule:
+      - pick
       - parse
-      - subject
-      - save
-  - set: plain
-    file: common
-    desc: create a plain text list of email subjects
+      - mark
+      - classify
+      - save: inbox
+      - move
+      - save: inbox
+      - drop: inbox
+
+  - set: test
     rule:
-      - parse
-      - format
-      - save
-filters:
-  - list: whitelist
-    folder: filtered
-    active: []
-  - list: finance
-    folder: filtered/finance
-    active: []
-  - list: gators
-    folder: filtered/gators
-    active: []
-  - list: jobs
-    folder: filtered/boards
-    active: []
-  - list: news
-    folder: filtered/news
-    active: []
-  - list: vendors
-    folder: filtered/vendors
-    active: []
-index: 2
+      - load: inbox
+      - classify
+      - save: inbox
+
+  - set: sort
+    rule:
+      - load: inbox
+      - move
+      - drop: inbox
