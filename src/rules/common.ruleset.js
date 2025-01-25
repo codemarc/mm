@@ -53,7 +53,7 @@ export async function check(msglist, ...args) {
 // ----------------------------------------------------------------------------
 export async function pick(msglist, ...args) {
   const [acct, options, client, ruleset, rule] = args
-  const picklist = typeof rule?.pick === "string" ? [rule.pick] : (rule?.pick ?? ["unread"])
+  const picklist = typeof rule?.pick === "string" ? [rule.pick] : (rule?.pick ?? [])
   brief(`rule:pick: ${picklist}`)
   if (picklist.includes("unread")) options.unread = true
   if (picklist.includes("tagged")) options.tagged = true

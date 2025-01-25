@@ -24,14 +24,16 @@ rules:
       - save: inbox
       - drop: inbox
 
-  - set: test
+  - set: autocat
     rule:
-      - load: inbox
-      - classify
-      - save: inbox
+      - pick
+      - parse
+      - save: autocat
 
-  - set: sort
+  - set: test
+    file: autocat
     rule:
-      - load: inbox
-      - move
-      - drop: inbox
+      - load: autocat
+      - parse
+      - classify
+      - save: test

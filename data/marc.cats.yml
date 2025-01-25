@@ -1,88 +1,42 @@
-ai:
-  domains:
-    - openai.com
-    - anthropic.com
-  keywords:
-    - artifical
-    - intelligence
-    - gpt
-
-bills:
-  domains:
-    - americanexpress.com
-    - bankofamerica.com
-    - chase.com
-    - linkedin.com
-    - oatesenergy.com
-    - synchrony.com
-    - venmo.com
-  keywords:
-    - payment
-    - bill
-    - statement
-    - balance
-    - due
-
-invest:
-  domains:
-    - schwab.com
-    - unusualwhales.com
-  keywords:
-    - stock
-    - trade
-    - invest
-    - portfolio
-    - market
-
-news:
-  domains:
-    - medium.com
-    - mckinsey.com
-    - join1440.com
-    - insideapple.apple.com
-    - genai.works
-    - beehiiv.com
-    - tldrnewsletter.com
-  keywords:
-    - news
-    - article
-    - report
-    - analysis
-    - update
-    - newsletter
-
-notify:
-  domains:
-    - notifications.com
-    - alerts.com
-    - noreply
-    - donotreply
-    - automated
-  keywords:
-    - notification
-    - alert
-    - confirm
-    - verify
-    - notice
-
-jobsmm open:
-  domains:
-    - theladders.com
-  keywords:
-    - job
-    - career
-    - resume
-    - hiring
-
-vendors:
-  domains:
-    - snowflake.net
-    - docker.com
-    - meetappllo.io
-
 undefined:
   domains:
     - academia-mail.com
-    - financialmarketsdigest.com
-    - newyorktimes.com
-    - expireinthemoney.com
+    - accessadrian.com
+    - newsletters@analystratings.net
+    - ontraport.com
+    - qemailserver.com
+    - qualtrics.com
+    - surveygizmo.com
+    - surveymonkey.com
+  keywords: []
+job:
+  domains:
+    - dice.com
+    - gainwelltechnologies.com
+    - ihire.com
+    - jobs2web.com
+    - theladders.com
+    - zippia.com
+    - ziprecruiter.com
+  keywords:
+    - job
+noreply:
+  domains:
+    - citi.com
+    - calendly.com
+    - myworkday.com
+  keywords:
+    - no-reply
+bills:
+  domains:
+    - citi.com
+    - calendly.com
+    - myworkday.com
+  keywords:
+    - statement
+news:
+  domains:
+    - newsletters.medium.com
+    - substack.com
+  keywords:
+    - newsletter

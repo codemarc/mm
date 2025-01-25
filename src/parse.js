@@ -15,6 +15,7 @@ const roundToMinutes = (date) => {
 // ----------------------------------------------------------------------------
 export async function parsem(msglist, ...args) {
   if (msglist.length === 0) return msglist
+  if (msglist[0].source === undefined) return msglist
   const [acct, options, client, ruleset, rule] = args
 
   // parse the message
