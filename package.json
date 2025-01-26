@@ -1,15 +1,25 @@
 {
   "name": "@codemarc/mm",
-  "version": "0.0.9",
+  "version": "0.0.1",
   "description": "mail minder - code to manage your inbox",
   "main": "mm",
   "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "patch-package"
+  },
+  "keywords": [
+    "email",
+    "inbox",
+    "rules",
+    "automation"
+  ],
+  "author": "marc j. greenberg <marc@codemarc.net>",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/codemarc/mm.git"
   },
-  "author": "marc j. greenberg <marc@codemarc.net>",
   "bugs": {
     "url": "https://github.com/codemarc/mm/issues"
   },
@@ -17,29 +27,8 @@
   "bin": {
     "mm": "mm"
   },
-  "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest"
-  },
-  "dependencies": {
-    "caporal": "^1.4.0",
-    "chalk": "^4.1.2",
-    "console.table": "^0.10.0",
-    "imapflow": "^1.0.171",
-    "js-yaml": "^4.1.0",
-    "lodash": "^4.17.21",
-    "mailparser": "^3.7.2"
-  },
   "devDependencies": {
-    "@babel/preset-env": "^7.26.0",
     "@biomejs/biome": "^1.9.4",
-    "babel-jest": "^29.7.0",
-    "jest": "^29.7.0"
-  },
-  "jest": {
-    "transform": {},
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    }
+    "patch-package": "^8.0.0"
   }
 }
