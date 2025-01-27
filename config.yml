@@ -1,0 +1,57 @@
+version: 1
+accounts:
+  - account: null
+    index: 1
+    name: codemarc
+    type: imap
+    user: codemarc@gmail.com
+    password: >-
+      e77ca43e72d7f7dbc626cb996c4bfacc::f022a996b0b648e364dbbb6cdfa457ee882d9497f4c23d55264601d68a71507f
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    active: true
+  - account: null
+    index: 2
+    name: marc
+    type: imap
+    user: marc@codemarc.net
+    password: >-
+      42742c74baf9cf8a824779cc59cb0044::17a7dd52be218fc402f766d8f78536435eebc2e470c0c23abb9b8dc354caabce
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    active: true
+  - account: null
+    index: 3
+    name: marc17
+    type: imap
+    user: marcgreenberg17@gmail.com
+    password: >-
+      9633d60f9a5d7bdbe2aa90173cf60ae7::d22813e77cde691b4acd3d596081da18e8b30a0ef61de26334ff78f6041174de
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    active: true
+  - account: null
+    index: 4
+    name: smashedata
+    type: imap
+    user: smashedata@gmail.com
+    password: >-
+      956aa60e3fac1bd1db7508f34d0e1776::7e9f8e63b9def1d1495558b70cef1376a542efdb456e8c23bae54dbbca7fc5ea
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    active: false
+  - account: null
+    index: 5
+    name: birdie
+    type: imap
+    user: a.birdie.toldme@gmail.com
+    password: >-
+      a1809f9cf9f392d1b97bff218cd637de::d0d8c054b55c6fbbdf9c02fe168f18186ed8333b02e669fd10e278987b37ddac
+    host: imap.gmail.com
+    port: 993
+    tls: true
+    active: false
