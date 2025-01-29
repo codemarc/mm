@@ -1,8 +1,7 @@
 version: 1
 accounts:
-  - account: null
+  - account: codemarc
     index: 1
-    name: codemarc
     type: imap
     user: codemarc@gmail.com
     password: >-
@@ -11,9 +10,8 @@ accounts:
     port: 993
     tls: true
     active: true
-  - account: null
+  - account: marc
     index: 2
-    name: marc
     type: imap
     user: marc@codemarc.net
     password: >-
@@ -22,9 +20,8 @@ accounts:
     port: 993
     tls: true
     active: true
-  - account: null
+  - account: marc17
     index: 3
-    name: marc17
     type: imap
     user: marcgreenberg17@gmail.com
     password: >-
@@ -33,9 +30,8 @@ accounts:
     port: 993
     tls: true
     active: true
-  - account: null
+  - account: smashedata
     index: 4
-    name: smashedata
     type: imap
     user: smashedata@gmail.com
     password: >-
@@ -44,9 +40,8 @@ accounts:
     port: 993
     tls: true
     active: false
-  - account: null
+  - account: birdie
     index: 5
-    name: birdie
     type: imap
     user: a.birdie.toldme@gmail.com
     password: >-

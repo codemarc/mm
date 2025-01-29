@@ -1,8 +1,9 @@
-import path from "node:path"
-import fs from "node:fs"
 import crypto from "node:crypto"
-import yaml from "js-yaml"
+import fs from "node:fs"
+import path from "node:path"
 import chalkPipe from "chalk-pipe"
+import { ImapFlow } from "imapflow"
+import yaml from "js-yaml"
 import pak from "../package.json" assert { type: "json" }
 
 // ----------------------------------------------------------------------------
@@ -43,7 +44,8 @@ export default class util {
       config_path: path.resolve(
         path.normalize(process.env.MM_CONFIG_PATH || path.join(process.cwd()))
       ),
-      openCommand: process.env.MM_OPEN_COMMAND || "outlook"
+      openCommand: process.env.MM_OPEN_COMMAND || "outlook",
+      accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all"
     }
 
     this.cpbrief = chalkPipe("magenta")
@@ -55,7 +57,6 @@ export default class util {
     this.setInstance(iv)
 
     this.config = this.load()
-
     util.instance = this
   }
 
@@ -117,6 +118,37 @@ export default class util {
     }
   }
 
+  getImapFlow(account, nologger) {
+    return new ImapFlow({
+      host: account.host,
+      port: account.port,
+      secure: account.tls !== false,
+      auth: { user: account.user, pass: this.decrypt(account.password, false) },
+      logger: nologger ? false : this.options.verbose ? this.logger : false
+    })
+  }
+
+  getAccount = (config, key) => {
+    this.verbose(`finding account ${key}`)
+    let acct = config.accounts.find((a) => a.account === key)
+    if (!acct) {
+      const index = Number.parseInt(key)
+      if (!Number.isNaN(index)) {
+        this.verbose("trying index")
+        acct = config.accounts.find((a) => a.index === index)
+      }
+      if (!acct) {
+        this.error("account not found")
+        return null
+      }
+    }
+    this.verbose(`${acct.account} found`)
+    return acct
+  }
+
+  // ------------------------------------------------------------------------
+  // load
+  // ------------------------------------------------------------------------
   load = () => {
     let config = {}
 
@@ -143,6 +175,9 @@ export default class util {
     return config
   }
 
+  // ------------------------------------------------------------------------
+  // save
+  // ------------------------------------------------------------------------
   save = (config) => {
     // validate the config directory exists
     if (!fs.existsSync(this.dv.config_path)) {
@@ -160,6 +195,22 @@ export default class util {
       this.error(err)
     }
     return config
+  }
+
+  // ------------------------------------------------------------------------
+  // getFolderPath
+  // ------------------------------------------------------------------------
+  getFolderPath = async (client, name) => {
+    if (name?.toLowerCase() === "inbox") {
+      return "INBOX"
+    }
+    const folders = await client.list()
+    const folder = folders.find((f) => f.name === name)?.path
+
+    if (name === "Archive") {
+      return folder ?? "[Gmail]/All Mail"
+    }
+    return folder ?? folders.find((f) => f.path === name)?.path
   }
 
   // ------------------------------------------------------------------------

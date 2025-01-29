@@ -37,6 +37,18 @@ try {
     .option("-v, --verbose", "verbose mode")
     .action(commands.open)
 
+  // --------------------------------------------------------------
+  // clean command
+  // --------------------------------------------------------------
+  program
+    .command("clean", "clean up mailboxes")
+    .argument("[account]", `specify account from config (defaults: ${u.dv.accountAlias})`)
+    .option("-a, --all", "select all accounts active or not")
+    .option("-b, --brief", "brief/minimal output")
+    .option("-q, --quiet", "quiet mode")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.clean)
+
   program.parse(process.argv)
 } catch (e) {
   console.error(e)
