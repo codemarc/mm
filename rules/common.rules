@@ -1,0 +1,14 @@
+version: 1
+rules:
+  - set: save
+    desc: saves incomming mail
+    rule:
+      - select
+      - mark
+      - save: inbox
+  - set: test
+    rule:
+      - load: inbox
+      - classify
+      - dispose
+      - save: inbox

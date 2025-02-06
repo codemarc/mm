@@ -1,4 +1,5 @@
 import util from "./util.js"
+const u = new util()
 
 // =============================================================================
 // smash command
@@ -13,7 +14,6 @@ import util from "./util.js"
 //
 // =============================================================================
 export async function smashCommand(args, options, logger) {
-  const u = new util()
   const config = u.setInstance({ args, options, logger })
 
   try {

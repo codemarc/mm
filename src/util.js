@@ -45,7 +45,15 @@ export default class util {
         path.normalize(process.env.MM_CONFIG_PATH || path.join(process.cwd()))
       ),
       openCommand: process.env.MM_OPEN_COMMAND || "outlook",
-      accountAlias: process.env.MM_DEFAULT_ACCOUNT || "all"
+      scanLimit: process.env.MM_SCAN_LIMIT || "5",
+      rulesFolder: path.resolve(
+        path.normalize(process.env.MM_RULES_FOLDER || path.join(process.cwd(), "rules"))
+      ),
+      dataFolder: path.resolve(
+        path.normalize(process.env.MM_DATA_FOLDER || path.join(process.cwd(), "data"))
+      ),
+      rulesFile: process.env.MM_RULES_FILE || "common",
+      rulesSet: process.env.MM_RULES_SET || "save"
     }
 
     this.cpbrief = chalkPipe("magenta")
@@ -112,10 +120,20 @@ export default class util {
 
   brief(message) {
     if (!this.options?.quiet && this.options?.brief) {
-      const msg = `${this.cpbrief(message)}`
+      const msg = `${ts()} ${this.cpbrief(message)}`
       if (this.logger) this.logger.info(msg)
       else console.log(msg)
     }
+  }
+
+  green(message) {
+    const clr = chalkPipe("green")
+    return message === undefined ? clr("-".repeat(63)) : clr(message)
+  }
+
+  red(message) {
+    const clr = chalkPipe("red")
+    return message === undefined ? clr("-".repeat(63)) : clr.red(message)
   }
 
   getImapFlow(account, nologger) {
@@ -144,6 +162,67 @@ export default class util {
     }
     this.verbose(`${acct.account} found`)
     return acct
+  }
+
+  // ------------------------------------------------------------------------
+  // loadRules
+  // ------------------------------------------------------------------------
+  loadRules = async (ruleset) => {
+    const rulesFile = path.join(this.dv.rulesFolder, `${ruleset.file ?? this.dv.rulesFile}.js`)
+
+    this.verbose(this.green())
+    this.verbose(this.green(`ruleset: ${ruleset.set} - ${ruleset.desc ?? ""}`))
+    this.verbose(this.green(`   file: ${rulesFile}`))
+    this.verbose(this.green())
+
+    // validate the config directory exists
+    if (!fs.existsSync(this.dv.rulesFolder)) {
+      this.error(`rules folder not found: ${this.dv.rulesFolder}`)
+      return null
+    }
+
+    if (!fs.existsSync(rulesFile)) {
+      this.error(`rules file not found: ${rulesFile}`)
+      return null
+    }
+
+    // load the rules file
+    try {
+      return await import(rulesFile)
+    } catch (err) {
+      if (this.options.verbose) this.verbose(this.red(err.stack))
+      else this.error(err)
+    }
+    return null
+  }
+
+  // ------------------------------------------------------------------------
+  // loadRuleSets
+  // ------------------------------------------------------------------------
+  loadRuleSets = () => {
+    let rulesets = {}
+
+    // validate the config directory exists
+    if (!fs.existsSync(this.dv.rulesFolder)) {
+      this.error(`rules folder not found: ${this.dv.rulesFolder}`)
+      return rulesets
+    }
+
+    const rulesFile = path.join(this.dv.rulesFolder, `${this.dv.rulesFile}.rules`)
+    this.verbose(`from ${rulesFile}`)
+
+    if (!fs.existsSync(rulesFile)) {
+      this.error(`rules file not found: ${rulesFile}`)
+      return rulesets
+    }
+
+    // load the rules file
+    try {
+      rulesets = yaml.load(fs.readFileSync(rulesFile, "utf8"))
+    } catch (err) {
+      this.error(err)
+    }
+    return rulesets
   }
 
   // ------------------------------------------------------------------------

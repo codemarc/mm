@@ -29,7 +29,7 @@ accounts:
     host: imap.gmail.com
     port: 993
     tls: true
-    active: true
+    active: false
   - account: smashedata
     index: 4
     type: imap
