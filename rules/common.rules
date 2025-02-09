@@ -10,5 +10,9 @@ rules:
     rule:
       - load: inbox
       - classify
+      - save: inbox
+  - set: act
+    rule:
+      - load: inbox
       - dispose
       - save: inbox

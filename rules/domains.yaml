@@ -1,0 +1,23 @@
+# Domain lists for email classification
+
+# Domains that are considered spam sources
+spam_domains:
+  - wiseprofitstrategy.com
+  - bullseyeoptiontrading.com
+  - expireinthemoney.com
+  - priceactionai.com
+  - tradewins.com
+  - wealthempire.com
+  - friendupdates@facebookmail.com
+  - dailymarketalerts.com
+  - classmates.com
+  - shopbop-mail.com
+  - kriskrohn.com
+  - homeadvisor.com
+  - tradealgo.com
+  - financialwisdomwave.com
+
+later_domains:
+  - medium.com
+  - linkedin.com
+  - historyfacts.com

@@ -11,7 +11,6 @@ const u = new util()
  */
 export async function save(msglist, ...args) {
   const [acct, options, client, ruleset, rule] = args
-  if (msglist.length === 0) return msglist
 
   if (rule?.save) {
     if (rule.save.endsWith(".json")) {

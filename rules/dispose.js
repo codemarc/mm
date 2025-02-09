@@ -12,7 +12,11 @@ export async function dispose(msglist, ...args) {
   const folder = options.folder && typeof options.folder === "string" ? options.folder : "INBOX"
   const trash = await u.getFolderPath(client, "Trash")
   const src = await u.getFolderPath(client, folder)
-  const review = await u.getFolderPath(client, "Review")
+  const review = await u.getFolderPath(client, "INBOX/_mm/Review")
+  const track = await u.getFolderPath(client, "INBOX/_mm/Track")
+  const later = await u.getFolderPath(client, "INBOX/_mm/Later")
+  const schedule = await u.getFolderPath(client, "INBOX/_mm/Schedule")
+  const urgent = await u.getFolderPath(client, "INBOX/_mm/Now")
 
   if (trash === undefined) {
     u.error("Trash folder is not available")
@@ -23,47 +27,20 @@ export async function dispose(msglist, ...args) {
     return msglist
   }
 
-  // handle deleted messages
-  const handleDeleted = async (msglist) => {
-    const deleteList = msglist.filter((msg) => msg.disposition === dispositions.DELETE)
-    if (deleteList.length === 0) {
-      u.verbose("no messages to delete")
+  const handle = async (msglist, dispose, src, dst) => {
+    const list = msglist.filter((msg) => msg.disposition === dispose)
+    if (list.length === 0) {
+      u.verbose(`no messages to ${dispose}`)
       return msglist
     }
-    const deleteSeqList = deleteList.map((msg) => msg.seq)
-    u.verbose(`moving messages from ${src} to ${trash}`)
+    const seqList = list.map((msg) => msg.seq)
+    u.verbose(`moving messages from ${src} to ${dst}`)
     try {
-      u.verbose("messages for deletion")
-      u.verbose(deleteSeqList)
-      await client.messageFlagsAdd(deleteSeqList, ["\\Deleted"])
-      await client.messageMove(deleteSeqList, trash, { uid: false })
-      u.verbose(`Moved ${deleteSeqList.length} messages to ${trash}`)
+      await client.messageMove(seqList, dst, { uid: false })
+      u.verbose(`Moved ${seqList.length} messages to ${dst}`)
 
-      // remove the deleted messaged from the msglist
-      return msglist.filter((msg) => !deleteSeqList.includes(msg.seq))
-    } catch (err) {
-      u.verbose(`select error: ${err.message}`)
-      if (options.verbose) u.verbose(err.stack)
-      return msglist
-    }
-  }
-
-  // handle file messages
-  const handleFiled = async (msglist) => {
-    const fileList = msglist.filter((msg) => msg.disposition === dispositions.FILE)
-    if (fileList.length === 0) {
-      u.verbose("no messages to file")
-      return msglist
-    }
-
-    const filedSeqList = fileList.map((msg) => msg.seq)
-    u.verbose(`moving messages from ${src} to ${review}`)
-    try {
-      await client.messageMove(filedSeqList, review, { uid: false })
-      u.verbose(`Moved ${filedSeqList.length} messages to ${review}`)
-
-      // remove the filed messaged from the msglist
-      return msglist.filter((msg) => !filedSeqList.includes(msg.seq))
+      // remove the handled messaged from the msglist
+      return msglist.filter((msg) => !seqList.includes(msg.seq))
     } catch (err) {
       u.verbose(`select error: ${err.message}`)
       if (options.verbose) u.verbose(err.stack)
@@ -74,9 +51,13 @@ export async function dispose(msglist, ...args) {
   // run the disposition logic
   const lock = await client.getMailboxLock(src)
   try {
-    const deleted = await handleDeleted(msglist)
-    const filed = await handleFiled(deleted)
-    return filed
+    const deleted = await handle(msglist, dispositions.DELETE, src, trash)
+    const tracked = await handle(deleted, dispositions.TRACK, src, track)
+    const filed = await handle(tracked, dispositions.FILE, src, review)
+    const scheduled = await handle(filed, dispositions.SCHEDULE, src, schedule)
+    const needed = await handle(scheduled, dispositions.REPLY_NEEDED, src, urgent)
+    const msgs = await handle(needed, dispositions.READ_LATER, src, later)
+    return msgs
   } finally {
     lock.release()
   }

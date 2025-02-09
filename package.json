@@ -1,6 +1,6 @@
 {
   "name": "@codemarc/mm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "mail minder - code to manage your inbox",
   "main": "mm",
   "type": "module",
@@ -8,12 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "patch-package"
   },
-  "keywords": [
-    "email",
-    "inbox",
-    "rules",
-    "automation"
-  ],
+  "keywords": ["email", "inbox", "rules", "automation"],
   "author": "marc j. greenberg <marc@codemarc.net>",
   "license": "MIT",
   "repository": {

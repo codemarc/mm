@@ -19,7 +19,7 @@ export const importancePatterns = {
   ],
   noise: [/promotion/i, /offer/i, /sale/i, /discount/i],
   news: [/newsletter/i],
-  actionable: [/action/i, /todo/i, /please/i, /review/i, /confirm/i, /verify/i, /update required/i],
+  actionable: [/action/i, /todo/i, /review/i, /confirm/i, /verify/i],
   conference: [
     // Event keywords with date patterns
     /(?:event|events|join us).*(?:on|at).*(?:\d{1,2}(?:st|nd|rd|th)?\s+(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)|(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2}(?:st|nd|rd|th)?)\s*(?:\d{4})?/i,

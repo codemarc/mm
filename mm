@@ -15,6 +15,18 @@ try {
   program.description(description)
 
   // --------------------------------------------------------------
+  // check command
+  // --------------------------------------------------------------
+  program
+    .command("check", "check mailboxes")
+    .argument("[account]", "specify account from config")
+    .option("-a, --all", "select all accounts active or not")
+    .option("-b, --brief", "brief/minimal output")
+    .option("-q, --quiet", "quiet mode")
+    .option("-v, --verbose", "verbose mode")
+    .action(commands.check)
+
+  // --------------------------------------------------------------
   // clean command
   // --------------------------------------------------------------
   program
